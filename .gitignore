@@ -24,4 +24,5 @@ textures/**/**~
 
 # ---- CMake config (explicitly excluded as requested) ----
 CMakeLists.txt
+.cache/
 
