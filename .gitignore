@@ -1,0 +1,27 @@
+# ---- build system ----
+build/
+
+# CMake-generated files
+compile_commands.json
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# ---- executables ----
+game
+
+# ---- scripts not to push ----
+game.sh
+
+# ---- editor / backup files ----
+*~
+*.bak
+*.swp
+
+# ---- assets backups (explicit) ----
+textures/**/**~ 
+
+# ---- CMake config (explicitly excluded as requested) ----
+CMakeLists.txt
+
