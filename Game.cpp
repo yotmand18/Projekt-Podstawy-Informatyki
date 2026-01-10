@@ -75,65 +75,168 @@ void Game::updatePlayer(){
     this->player->update();
 }
 
-void Game::updateCollision() {
-    sf::FloatRect playerBounds = this->player->getGlobalBounds();
-    sf::Vector2f velocity = this->player->getVelocity();
-    bool onGround = false;
+void Game::updateCollision(){
+    bool playerOnGround = false;
 
-    for (const auto* platform : this->level->getPlatforms()) {
-        sf::FloatRect platformBounds = platform->getBounds();
+    // =========================
+    // PLAYER vs PLATFORMS
+    // =========================
+    {
+        sf::FloatRect bounds = player->getGlobalBounds();
+        sf::Vector2f prevPos = player->getPrevPosition();
 
-        if (playerBounds.intersects(platformBounds)) {
-            // Calculate overlaps on both axes
-            float overlapX = 0.f;
-            float overlapY = 0.f;
+        sf::FloatRect prevBounds = bounds;
+        prevBounds.left = prevPos.x;
+        prevBounds.top  = prevPos.y;
 
-            // Horizontal overlap
-            if (playerBounds.left < platformBounds.left)
-                overlapX = playerBounds.left + playerBounds.width - platformBounds.left;
-            else
-                overlapX = platformBounds.left + platformBounds.width - playerBounds.left;
 
-            // Vertical overlap
-            if (playerBounds.top < platformBounds.top)
-                overlapY = playerBounds.top + playerBounds.height - platformBounds.top;
-            else
-                overlapY = platformBounds.top + platformBounds.height - playerBounds.top;
+        for (const auto* platform : level->getPlatforms()){
+            sf::FloatRect plat = platform->getBounds();
 
-            // Resolve on the SHORTEST axis first (this prevents "snagging" on corners)
-            if (std::abs(overlapX) < std::abs(overlapY)) {
-                // Horizontal Resolution
-                if (playerBounds.left < platformBounds.left)
-                    this->player->setPosition(platformBounds.left - playerBounds.width, playerBounds.top);
-                else
-                    this->player->setPosition(platformBounds.left + platformBounds.width, playerBounds.top);
-                
-                this->player->resetVelocityX();
-            } 
-            else {
-                // Vertical Resolution
-                if (playerBounds.top < platformBounds.top) { // Falling onto platform
-                    this->player->setPosition(playerBounds.left, platformBounds.top - playerBounds.height);
-                    onGround = true;
-                } else { // Hitting head on ceiling
-                    this->player->setPosition(playerBounds.left, platformBounds.top + platformBounds.height);
+            if (!bounds.intersects(plat))
+                continue;
+
+            // penetration depths
+            float dxLeft   = (bounds.left + bounds.width)  - plat.left;
+            float dxRight  = (plat.left + plat.width)      - bounds.left;
+            float dyTop    = (bounds.top + bounds.height)  - plat.top;
+            float dyBottom = (plat.top + plat.height)      - bounds.top;
+
+            float penX = std::min(dxLeft, dxRight);
+            float penY = std::min(dyTop, dyBottom);
+
+            bool cameFromSide =
+            prevBounds.top + prevBounds.height > plat.top &&
+            prevBounds.top < plat.top + plat.height;
+
+            if (penX < penY && cameFromSide) {
+                // -------- horizontal --------
+                if (prevPos.x + bounds.width <= plat.left){
+                    // came from left
+                    player->setPosition(plat.left - bounds.width, bounds.top);
+                } else {
+                    // came from right
+                    player->setPosition(plat.left + plat.width, bounds.top);
                 }
-                this->player->resetVelocityY();
+                player->resetVelocityX();
+            } else {
+                // -------- vertical --------
+                if (prevPos.y + bounds.height <= plat.top){
+                    // landed on platform
+                    player->setPosition(bounds.left, plat.top - bounds.height);
+                    playerOnGround = true;
+                } else {
+                    // hit ceiling
+                    player->setPosition(bounds.left, plat.top + plat.height);
+                }
+                player->resetVelocityY();
             }
-            // Update bounds after resolution for the next platform check
-            playerBounds = this->player->getGlobalBounds();
+
+            bounds = player->getGlobalBounds();
         }
     }
 
-    // Screen Boundary
-    if (this->player->getPosition().y + playerBounds.height >= this->window.getSize().y) {
-        this->player->resetVelocityY();
-        this->player->setPosition(this->player->getPosition().x, this->window.getSize().y - playerBounds.height);
-        onGround = true;
+    // =========================
+    // PLAYER vs SCREEN BOTTOM
+    // =========================
+    {
+        sf::FloatRect b = player->getGlobalBounds();
+        float bottom = static_cast<float>(window.getSize().y);
+
+        if (b.top + b.height >= bottom){
+            player->setPosition(b.left, bottom - b.height);
+            player->resetVelocityY();
+            playerOnGround = true;
+        }
     }
 
-    this->player->setCanJump(onGround);
+    player->setCanJump(playerOnGround);
+
+    // =========================
+    // ENEMIES vs PLATFORMS
+    // =========================
+    for (auto* enemy : level->getEnemies()){
+        bool hitWall = false;
+
+        if (!enemy->isAlive())
+            continue;
+
+        bool enemyOnGround = false;
+        sf::FloatRect bounds = enemy->getGlobalBounds();
+        sf::Vector2f prevPos = enemy->getPrevPosition();
+
+        sf::FloatRect prevBounds;
+        prevBounds.left   = prevPos.x;
+        prevBounds.top    = prevPos.y;
+        prevBounds.width  = bounds.width;
+        prevBounds.height = bounds.height;
+
+        for (const auto* platform : level->getPlatforms()){
+            sf::FloatRect plat = platform->getBounds();
+
+            if (!bounds.intersects(plat))
+                continue;
+
+            float dxLeft   = (bounds.left + bounds.width)  - plat.left;
+            float dxRight  = (plat.left + plat.width)      - bounds.left;
+            float dyTop    = (bounds.top + bounds.height)  - plat.top;
+            float dyBottom = (plat.top + plat.height)      - bounds.top;
+
+            float penX = std::min(dxLeft, dxRight);
+            float penY = std::min(dyTop, dyBottom);
+
+            bool cameFromSide =
+            prevBounds.top + prevBounds.height > plat.top &&
+            prevBounds.top < plat.top + plat.height;
+
+            if (penX < penY && cameFromSide) {  
+                // horizontal collision
+                hitWall = true;
+
+                if (prevPos.x + bounds.width <= plat.left)
+                    enemy->setPosition(plat.left - bounds.width, bounds.top);
+                else
+                    enemy->setPosition(plat.left + plat.width, bounds.top);
+
+                enemy->resetVelocityX();
+            } else {
+                // vertical
+                if (prevPos.y + bounds.height <= plat.top){
+                    enemy->setPosition(bounds.left, plat.top - bounds.height);
+                    enemyOnGround = true;
+                } else {
+                    enemy->setPosition(bounds.left, plat.top + plat.height);
+                }
+                enemy->resetVelocityY();
+            }
+
+            bounds = enemy->getGlobalBounds();
+        }
+
+        // =========================
+        // ENEMY vs SCREEN BOTTOM
+        // =========================
+        {
+            sf::FloatRect b = enemy->getGlobalBounds();
+            float bottom = static_cast<float>(window.getSize().y);
+
+            if (b.top + b.height >= bottom){
+                enemy->setPosition(b.left, bottom - b.height);
+                enemy->resetVelocityY();
+                enemyOnGround = true;
+            }
+        }
+
+        if (hitWall && enemyOnGround) {
+            enemy->jump();
+        }
+
+
+        enemy->setCanJump(enemyOnGround);
+    }
 }
+
+
 
 void Game::updateView(){
     // Center view on player horizontally, keep Y fixed
@@ -145,6 +248,32 @@ void Game::updateView(){
     // Add boundaries so camera doesn't go too far left
     if(this->view.getCenter().x < 400.f)
         this->view.setCenter(400.f, 300.f);
+}
+
+void Game::updateCombat() {
+    sf::FloatRect playerBounds = this->player->getGlobalBounds();
+    sf::FloatRect attackBounds = this->player->getAttackBounds();
+    bool isAttacking = this->player->isAttacking();
+    bool isHitFrame = this->player->isInAttackHitFrame();  // ADD THIS
+    
+    for(auto* enemy : this->level->getEnemies()) {
+        if(!enemy->isAlive())
+            continue;
+        
+        sf::FloatRect enemyBounds = enemy->getGlobalBounds();
+        
+        // Only deal damage during the hit frames AND if haven't hit yet
+        if(isAttacking && isHitFrame && !this->player->hasAttackHit() && 
+           attackBounds.intersects(enemyBounds)) {
+            enemy->takeDamage(2);
+            this->player->setAttackHit();
+            std::cout << "Hit enemy! Enemy health: " << enemy->getHealth() << "\n";
+        }
+        
+        if(playerBounds.intersects(enemyBounds)) {
+            this->player->takeDamage(enemy->getDamage());
+        }
+    }
 }
 
 void Game::update(){
@@ -164,9 +293,18 @@ void Game::update(){
 
     this->updateInput();
     this->updatePlayer();
+    //this->level->update();
     this->updateCollision();
+    this->updateCombat();
+
     this->updateView();
+    this->level->update(this->player->getPosition(), this->view);
+
+    if(!this->player->isAlive()){
+        this->gameOver = true;
+    }
 }
+
 void Game::renderPlayer(){
     this->player->render(this->window);
 }

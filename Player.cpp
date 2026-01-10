@@ -1,64 +1,49 @@
 #include "Player.h"
 
 // Initialization
-
 void Player::initAnimations(){
     this->animationClock.restart();
     this->animState = IDLE;
     this->previousAnimState = IDLE;
-    this->velocity = {0.f, 0.f};
-
     this->canSwitchAnimation = true;
     this->animationForward = true;
 }
 
-void Player::initPhysics(){
-    this->gravity = 4.f;
-    this->velocityMaxY = 200.f;
-    this->canJump = false;
-}
-
 void Player::initStats(){
-    this->health = 10;
-    this->maxHealth = 30;
+    this->health = 15;
+    this->maxHealth = 100;
     this->points = 0;
-
-    // Flags
-
+    this->damageCooldown = 1.f;
     this->lostHealth = false;
     this->gainedHealth = false;
+    this->hasDealtDamage = false;
+    this->facingRight = true;
 }
 
 // Constructors / Destructors
-
 Player::Player(sf::Texture& texture_sheet){
     this->sprite.setTexture(texture_sheet);
     this->currentFrame = sf::IntRect(0, 0, 28, 30);
-    
     this->sprite.setScale(5.f, 5.f);
-    
     this->hitbox = sf::FloatRect(0.f, 0.f, 22.f * 5.f, 30.f * 5.f);
-    
     this->sprite.setTextureRect(this->currentFrame);
     
+    // Create physics object
+    this->physics = new Physics(sf::Vector2f(0.f, 0.f), &this->sprite, true);
+    
     this->initAnimations();
-    this->initPhysics();
     this->initStats();
 }
 
 Player::~Player(){
-
-
+    delete this->physics;
 }
 
 // Accessors
-
 bool Player::getCanSwitchAnim(){
     bool anim_switch = this->canSwitchAnimation;
-
     if(this->canSwitchAnimation)
         canSwitchAnimation = false;
-
     return anim_switch;
 }
 
@@ -72,104 +57,107 @@ const sf::FloatRect Player::getGlobalBounds() const{
     bounds.top = this->sprite.getPosition().y;
     return bounds;
 }
+
 sf::Vector2f Player::getVelocity() const{
-    return this->velocity;
+    return this->physics->getVelocity();
 }
+
 int Player::getHealth() const{
     return this->health;
 }
+
 bool Player::isAlive() const{
     return (this->health > 0);
 }
 
-// Modifiers
+sf::FloatRect Player::getAttackBounds() const{
+    sf::FloatRect attackBounds = this->getGlobalBounds();
+    if(this->facingRight) {
+        attackBounds.width += 50.f;
+    } else {
+        attackBounds.left -= 50.f;
+        attackBounds.width += 50.f;
+    }
+    return attackBounds;
+}
 
+// Modifiers
 void Player::setPosition(const float x, const float y){
     this->sprite.setPosition(x, y);
 }
-void Player::resetVelocityY(){
-    this->velocity.y = 0.f;
-}
-void Player::resetVelocityX(){
-    this->velocity.x = 0.f;
-}
+
 void Player::setAnimState(short state){
     if(state == ATTACKING){
-        this->animationClock.restart();  // Start attack animation from beginning
-        this->currentFrame.left = 0.f;   // Reset to first frame
+        this->animationClock.restart();
+        this->currentFrame.left = 0.f;
+        this->hasDealtDamage = false;
     }
     this->animState = state;
 }
-void Player::takeDamage(int ammount){
-    this->lostHealth = true;
 
-    if(this->health - ammount <= 0)
+void Player::takeDamage(int amount){
+    if(this->damageCooldownClock.getElapsedTime().asSeconds() < this->damageCooldown)
+        return;
+    
+    std::cout << "Player health: " << this->health << "\n";
+    this->lostHealth = true;
+    
+    if(this->health - amount <= 0)
         this->health = 0;
     else
-        this->health -= ammount;
-
+        this->health -= amount;
+    
+    this->damageCooldownClock.restart();
+    this->sprite.setColor(sf::Color::Red);
 }
-void Player::gainHealth(int ammount){
-    if(this->health + ammount > this->maxHealth)
+
+void Player::gainHealth(int amount){
+    if(this->health + amount > this->maxHealth)
         this->health = this->maxHealth;
     else
-        this->health += ammount;
-
+        this->health += amount;
     this->gainedHealth = true;
+    this->sprite.setColor(sf::Color::Green);
 }
 
-
 // Functions
+bool Player::isInAttackHitFrame() const{
+    if(this->animState != ATTACKING)
+        return false;
+    return (this->currentFrame.left >= 148.f && this->currentFrame.left <= 222.f);
+}
 
 void Player::resetAnimationClock(){
     this->animationClock.restart();
     this->canSwitchAnimation = true;
 }
 
-
-
 void Player::move(const float dir_x, const float dir_y){
-    // Acceleration
-    //--this->velocity.x += dir_x * this->acceleration;
-    this->velocity.x = dir_x;
-
-    // Limit Velocity
-    //--if(std::abs(this->velocity.x) > this->velocityMax){
-    //     this->velocity.x = this->velocityMax*((this->velocity.x < 0) ? -1.f : 1.f);
-    // }
+    this->physics->move(dir_x, dir_y);
 }
 
 void Player::jump(){
-    this->velocity.y = -50.f;
-    setCanJump(false);
-}
-
-void Player::updatePhysics(){
-    // Gravity
-
-
-    this->velocity.y += this->gravity;
-
-    // Falling
-    if(this->velocity.y > this->velocityMaxY)
-        this->velocity.y = this->velocityMaxY;
-
-    this->sprite.move(this->velocity.x, this->velocity.y);
+    this->physics->jump();
 }
 
 void Player::updateMovement(){
-    // Don't change state if attacking
     if(this->animState == ATTACKING)
         return;
     
-    // Check for running (faster movement)
-    if(this->velocity.x > 3.f)  // Threshold for running
+    sf::Vector2f velocity = this->physics->getVelocity();
+    
+    if(velocity.x > 0.f)
+        this->facingRight = true;
+    else if(velocity.x < 0.f)
+        this->facingRight = false;
+    
+    if(velocity.x > 3.f)
         this->animState = RUNNING_RIGHT;
-    else if(this->velocity.x < -3.f)
+    else if(velocity.x < -3.f)
         this->animState = RUNNING_LEFT;
-    else if(this->velocity.x > 0.f)
+    else if(velocity.x > 0.f)
         this->animState = MOVING_RIGHT;
-    else if(this->velocity.x < 0.f)
+    else if(velocity.x < 0.f)
         this->animState = MOVING_LEFT;
     else   
         this->animState = IDLE;
@@ -190,12 +178,10 @@ void Player::updateAnimations(){
             this->animationClock.restart();
             this->sprite.setTextureRect(this->currentFrame);
         }
-        
     } else if(this->animState == IDLE){
         if(previousAnimState != IDLE){
             this->currentFrame.left = 0.f;
         }
-        
         this->currentFrame.width = 28.f;
         this->currentFrame.height = 30.f;
         
@@ -211,49 +197,40 @@ void Player::updateAnimations(){
             }
             if(this->currentFrame.left <= 0.f)
                 this->animationForward = true;
-
             this->animationClock.restart();
             this->sprite.setTextureRect(this->currentFrame);
         }
         this->sprite.setScale(5.f, 5.f);
         this->sprite.setOrigin(0.f, 0.f);
-        
     } else if(this->animState == MOVING_LEFT){
         if(previousAnimState != MOVING_LEFT){
             this->currentFrame.left = 0.f;
         }
-        
         this->currentFrame.width = 22.f;
         this->currentFrame.height = 30.f;
         
         if(this->animationClock.getElapsedTime().asSeconds() >= 0.15f || this->getCanSwitchAnim()){
             this->currentFrame.top = 30.f;
             this->currentFrame.left += 22.f;
-
             if(this->currentFrame.left >= 110.f)
                 this->currentFrame.left = 0.f;
-
             this->animationClock.restart();
             this->sprite.setTextureRect(this->currentFrame);
         }
         this->sprite.setScale(-5.f, 5.f);
         this->sprite.setOrigin(22.f, 0.f);
-
     } else if(this->animState == MOVING_RIGHT){
         if(previousAnimState != MOVING_RIGHT){
             this->currentFrame.left = 0.f;
         }
-        
         this->currentFrame.width = 22.f;  
         this->currentFrame.height = 30.f;  
         
         if(this->animationClock.getElapsedTime().asSeconds() >= 0.15f || this->getCanSwitchAnim()){
             this->currentFrame.top = 30.f;  
             this->currentFrame.left += 22.f;
-
             if(this->currentFrame.left >= 110.f)  
                 this->currentFrame.left = 0.f;
-
             this->animationClock.restart();
             this->sprite.setTextureRect(this->currentFrame);
         }
@@ -263,52 +240,54 @@ void Player::updateAnimations(){
         if(previousAnimState != RUNNING_LEFT){
             this->currentFrame.left = 0.f;
         }
-        
         this->currentFrame.width = 22.f;  
         this->currentFrame.height = 30.f;
         
         if(this->animationClock.getElapsedTime().asSeconds() >= 0.1f){  
             this->currentFrame.top = 60.f;  
             this->currentFrame.left += 22.f;
-
             if(this->currentFrame.left >= 110.f) 
                 this->currentFrame.left = 0.f;
-
             this->animationClock.restart();
             this->sprite.setTextureRect(this->currentFrame);
         }
         this->sprite.setScale(-5.f, 5.f);
         this->sprite.setOrigin(22.f, 0.f);
-
     } else if(this->animState == RUNNING_RIGHT){
         if(previousAnimState != RUNNING_RIGHT){
             this->currentFrame.left = 0.f;
         }
-        
         this->currentFrame.width = 22.f;
         this->currentFrame.height = 30.f;
         
         if(this->animationClock.getElapsedTime().asSeconds() >= 0.1f){
-            this->currentFrame.top = 60.f;  // Running sprite row
+            this->currentFrame.top = 60.f;
             this->currentFrame.left += 22.f;
-
             if(this->currentFrame.left >= 110.f)
                 this->currentFrame.left = 0.f;
-
             this->animationClock.restart();
             this->sprite.setTextureRect(this->currentFrame);
         }
         this->sprite.setScale(5.f, 5.f);
         this->sprite.setOrigin(0.f, 0.f);
     }
-    
     previousAnimState = this->animState;
 }
 
 void Player::update(){
-    this->updatePhysics();
+    this->previousPosition = this->sprite.getPosition();
+    this->physics->update();
     this->updateMovement();
     this->updateAnimations();
+
+    if(this->lostHealth && this->damageCooldownClock.getElapsedTime().asSeconds() > 0.2f){
+        this->sprite.setColor(sf::Color::White);
+        this->lostHealth = false;
+    }
+    if(this->gainedHealth){
+        this->sprite.setColor(sf::Color::White);
+        this->gainedHealth = false;
+    }
 }
 
 void Player::render(sf::RenderTarget& target){

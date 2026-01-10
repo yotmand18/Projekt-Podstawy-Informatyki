@@ -12,6 +12,9 @@ class Game{
         sf::Event ev;
         sf::View view;
         sf::Texture playerTextureSheet;
+        bool gameOver = false;
+        // sf::Font font;
+        // sf::Text gameOverText;
 
         // Class
 
@@ -37,6 +40,10 @@ class Game{
         // Accessors
 
         const sf::RenderWindow& getWindow() const;
+        
+        // Inline functions
+
+        inline bool getGameOver() const { return this->gameOver; };
 
         // Functions
 
@@ -44,6 +51,7 @@ class Game{
         void updatePlayer();
         void updateCollision();
         void updateView();
+        void updateCombat();
         
         void update();
 

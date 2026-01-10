@@ -1,4 +1,7 @@
 # Level 1
-# Fomat: type x y width height texture
+# Format: type x y width height texture
+# if enemy: type x y width height texture patrolLeft patrolRight
 platform 200 480 160 120 rock1
 platform 600 440 320 160 rock2
+enemy 900 440 160 160 drowner 900 1600
+enemy 1500 440 160 160 ghoul 1500 2500
