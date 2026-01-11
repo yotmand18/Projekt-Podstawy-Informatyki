@@ -7,8 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(SFML 2 REQUIRED COMPONENTS graphics window system)
 
-add_executable(sfml2_test
-    main.cpp
+add_executable(PI_project
+    project.cpp
 )
 
 target_link_libraries(sfml2_test PRIVATE
