@@ -20,9 +20,7 @@ game.sh
 *.swp
 
 # ---- assets backups (explicit) ----
-textures/**/**~ 
+textures/**/**~
 
-# ---- CMake config (explicitly excluded as requested) ----
-CMakeLists.txt
+# ---- cache ----
 .cache/
-
