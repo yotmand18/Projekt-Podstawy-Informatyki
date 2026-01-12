@@ -42,7 +42,6 @@ project.cpp
         
 ## Obecnie zaimplementowane mechaniki
 * lib.h / lib.cpp
-  - centralne miejsce dla wszystkich bibliotek (SFML, STD)
   - wspólne includy dla całego projektu
 
 * Input.h / Input.cpp
@@ -108,7 +107,7 @@ project.cpp
   - odczytuje pliki z ./levels/
   - tworzy wektor zawierające platformy
   - tworzy wektor zawierający przeciwników
-  - ładuje tekstury odpowiadające przecinikom i platformom, później oddaje je odpowiednim klasom
+  - ładuje tekstury odpowiadające przeciwnikom i platformom, później oddaje je odpowiednim klasom
 
 * ./levels/
   - format:
@@ -169,29 +168,28 @@ enemy 1500 440 160 160 ghoul 1500 2500
 - [ ] zapisywanie / ładowanie gry?
 
 #### Grafika
- - [ ] tekstury różnych przeciwników i animacje chodzenia dla nich, ewentualnie też ataku:
-%% przykładowe, przeciwnicy do ustalenia z projektem %%
-  - [ ] drownee.png
+- [ ] tekstury różnych przeciwników i animacje chodzenia dla nich, ewentualnie też ataku: (przykładowe, przeciwnicy do ustalenia z projektem)
+  - [ ] drowner.png
   - [ ] nekker.png
   - [ ] ghoul.png
   - [ ] wraith.png
   - [ ] griffin.png
- - [ ] tekstury różnych platform - w zależności od poziomów
- - [ ] tła różnych poziomów - w zależności od poziomów
+- [ ] tekstury różnych platform - w zależności od poziomów
+- [ ] tła różnych poziomów - w zależności od poziomów
  
 #### Projektowanie
- - [ ] wymyślenie historii:
+- [ ] wymyślenie historii:
   - [ ] główny cel (boss?)
   - [ ] narracja między poziomami?
- - [ ] ilość poziomów?
- - [ ] czym jest poszczególny poziom - np. las, miasto itd.
- - [ ] zaprojektowanie poziomów - ułożenie platform, przeciwników w odpowiednich miejscach
+- [ ] ilość poziomów?
+- [ ] czym jest poszczególny poziom - np. las, miasto itd.
+- [ ] zaprojektowanie poziomów - ułożenie platform, przeciwników w odpowiednich miejscach
  
 ## Wersja 0.2
 * Dodanie kamery podążającej za graczem
 * Edycja struktury plików poziomu w ./levels/
   - obiekt zaczyna się od typu obiektu: "platform" lub "enemy"
-  - dla typu "enemy" zapisuje się: koordynaty, szerokość, wysokość, lewą granica strfy patrolowania, nazwę tekstury / rodzaju przeciwnika, prawą granicę strefy patrolowania
+  - dla typu "enemy" zapisuje się: koordynaty, szerokość, wysokość, nazwę tekstury / rodzaju przeciwnika, lewą granica strefy patrolowania, prawą granicę strefy patrolowania
 * Dodanie klasy Enemy.h
 * Edycja Level.h - uwzględnienie przeciwników
 * Dodanie klasy Physics.h, przeniesienie obliczania fizyki z Player.h, zarówno przeciwnicy jak i gracz korzystają z fizyki
