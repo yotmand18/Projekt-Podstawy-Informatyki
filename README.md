@@ -5,36 +5,35 @@ _( nie ma tu zbyt wiele )_
 ## Struktura repozytorium
 
 .
-│
 ├── src
-│   └── pliki .cpp i .h
+│   └── pliki .cpp i .h
 ├── levels
-│   └── pliki tekstowe zawierające zawartość poziomów
-└── textures
-    ├── backgrounds
-    │   └── tła poszczególnych poziomów
-    ├── enemies
-    │   └── stylesheets dla przeciników
-    ├── platforms
-    │   └── tekstury platform
-    └── player
-    └── stylesheet dla gracza
+│   └── pliki tekstowe zawierające zawartość poziomów
+├── textures
+├── backgrounds
+│   └── tła poszczególnych poziomów
+├── enemies
+│   └── stylesheets dla przeciwników
+├── platforms
+│   └── tekstury platform
+└── player
+│   └── stylesheet dla gracza
 
 #### Struktura posiadania bibiliotek:
 
 project.cpp
-└── Game.h - Game.cpp
-    ├── Input.h
-    │   └── lib.h
-    ├── Player.h
-    │   └── Physics.h
-    │       └── lib.h
-    └── Level.h
-        ├── Enemy.h
-        │   └── Physics.h
-        │       └── lib.h
-        └── Platform.h
-            └── lib.h
+├── Game.h - Game.cpp
+│   ├── Input.h
+│   │   └── lib.h
+│   ├── Player.h
+│   │   └── Physics.h
+│   │       └── lib.h
+│   └── Level.h
+│       ├── Enemy.h
+│       │   └── Physics.h
+│       │       └── lib.h
+│       └── Platform.h
+│           └── lib.h
         
 ## Obecnie zaimplementowane mechaniki
 * lib.h / lib.cpp
