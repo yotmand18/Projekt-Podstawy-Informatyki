@@ -26,17 +26,17 @@ _( nie ma tu zbyt wiele )_
 ```
 project.cpp
 ├── Game.h - Game.cpp
-│   ├── Input.h
-│   │   └── lib.h
-│   ├── Player.h
-│   │   └── Physics.h
-│   │       └── lib.h
-│   └── Level.h
-│       ├── Enemy.h
-│       │   └── Physics.h
-│       │       └── lib.h
-│       └── Platform.h
-│           └── lib.h
+    ├── Input.h
+    │   └── lib.h
+    ├── Player.h
+    │   └── Physics.h
+    │       └── lib.h
+    └── Level.h
+        ├── Enemy.h
+        │   └── Physics.h
+        │       └── lib.h
+        └── Platform.h
+            └── lib.h
 ```
 
         
