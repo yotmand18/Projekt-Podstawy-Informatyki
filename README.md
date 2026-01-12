@@ -18,7 +18,7 @@ _( nie ma tu zbyt wiele )_
     ├── platforms
     │   └── tekstury platform
     └── player
-        └── stylesheet dla gracza
+    └── stylesheet dla gracza
 
 #### Struktura posiadania bibiliotek:
 
@@ -30,11 +30,11 @@ project.cpp
     │   └── Physics.h
     │       └── lib.h
     └── Level.h
-        ├── Enemy.h
-        │   └── Physics.h
-        │       └── lib.h
-        └── Platform.h
-            └── lib.h
+        ├── Enemy.h
+        │   └── Physics.h
+        │       └── lib.h
+        └── Platform.h
+            └── lib.h
         
 ## Obecnie zaimplementowane mechaniki
 * lib.h / lib.cpp
