@@ -1,6 +1,5 @@
 #pragma once
 
-#include "lib.h"
 #include "Physics.h"
 
 enum PLAYER_ANIMATION_STATES{ IDLE = 0, MOVING_LEFT, MOVING_RIGHT, RUNNING_RIGHT, RUNNING_LEFT, ATTACKING };

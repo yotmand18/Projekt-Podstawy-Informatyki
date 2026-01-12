@@ -1,6 +1,5 @@
 #pragma once
 
-#include "lib.h"
 #include "Platform.h"
 #include "Enemy.h"
 

@@ -13,6 +13,8 @@ class Game{
         sf::View view;
         sf::Texture playerTextureSheet;
         bool gameOver = false;
+        sf::Texture backgroundTexture;
+        sf::Sprite backgroundSprite;
         // sf::Font font;
         // sf::Text gameOverText;
 

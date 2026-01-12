@@ -3,20 +3,33 @@
 // Initialization
 
 void Game::initWindow(){
-    this->window.create(sf::VideoMode(800, 600), "Game", sf::Style::Close | sf::Style::Titlebar);
+    this->window.create(sf::VideoMode(1280, 720), "Game", sf::Style::Close | sf::Style::Titlebar | sf::Style::Resize);
     this->window.setFramerateLimit(60);
 
     // Initialize view
-    this->view.setSize(800.f, 600.f);
-    this->view.setCenter(400.f, 300.f);
+    this->view.setSize(1280.f, 720.f);
+    this->view.setCenter(630.f, 360.f);
 
 }
 
 void Game::initTextures(){
     if(!this->playerTextureSheet.loadFromFile("./textures/player/player_stylesheet.png"))
-        std::cout << "ERROR::GAME::Failed to load texture\n";
+        std::cout << "ERROR::GAME::Failed to load player texture\n";
     else
-        this->playerTextureSheet.setSmooth(false);  // Sharp pixels
+        this->playerTextureSheet.setSmooth(false);
+    
+    // Load background
+    if(!this->backgroundTexture.loadFromFile("./textures/backgrounds/level1.png"))
+        std::cout << "ERROR::GAME::Failed to load background\n";
+    else {
+        this->backgroundTexture.setSmooth(false);
+        this->backgroundSprite.setTexture(this->backgroundTexture);
+        
+        // Scale to fit view
+        float scaleX = 1280.f / this->backgroundTexture.getSize().x;
+        float scaleY = 720.f / this->backgroundTexture.getSize().y;
+        this->backgroundSprite.setScale(scaleX, scaleY);
+    }
 }
 
 void Game::initInput(){
@@ -141,7 +154,7 @@ void Game::updateCollision(){
     // =========================
     {
         sf::FloatRect b = player->getGlobalBounds();
-        float bottom = static_cast<float>(window.getSize().y);
+        float bottom = this->view.getSize().y;
 
         if (b.top + b.height >= bottom){
             player->setPosition(b.left, bottom - b.height);
@@ -218,7 +231,7 @@ void Game::updateCollision(){
         // =========================
         {
             sf::FloatRect b = enemy->getGlobalBounds();
-            float bottom = static_cast<float>(window.getSize().y);
+            float bottom = this->view.getSize().y;
 
             if (b.top + b.height >= bottom){
                 enemy->setPosition(b.left, bottom - b.height);
@@ -242,12 +255,12 @@ void Game::updateView(){
     // Center view on player horizontally, keep Y fixed
     this->view.setCenter(
         this->player->getPosition().x + this->player->getGlobalBounds().width / 2.f,
-        300.f
+        360.f
     );
 
     // Add boundaries so camera doesn't go too far left
-    if(this->view.getCenter().x < 400.f)
-        this->view.setCenter(400.f, 300.f);
+    if(this->view.getCenter().x < 640.f)
+        this->view.setCenter(640.f, 360.f);
 }
 
 void Game::updateCombat() {
@@ -283,8 +296,29 @@ void Game::update(){
             this->window.close();
         else if(this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Escape)
             this->window.close();
+
+        // Handle window resize
+        else if(this->ev.type == sf::Event::Resized){
+            // Calculate aspect ratios
+            float windowRatio = static_cast<float>(this->ev.size.width) / static_cast<float>(this->ev.size.height);
+            float viewRatio = this->view.getSize().x / this->view.getSize().y;  // 1280/720 = 16:9
+            
+            sf::FloatRect viewport;
+            
+            if(windowRatio > viewRatio){
+                // Window is wider - add pillarboxes (black bars on sides)
+                float viewportWidth = viewRatio / windowRatio;
+                viewport = sf::FloatRect((1.f - viewportWidth) / 2.f, 0.f, viewportWidth, 1.f);
+            } else {
+                // Window is taller - add letterboxes (black bars top/bottom)
+                float viewportHeight = windowRatio / viewRatio;
+                viewport = sf::FloatRect(0.f, (1.f - viewportHeight) / 2.f, 1.f, viewportHeight);
+            }
+            
+            this->view.setViewport(viewport);
+        }
         
-        // ADD JUMP HERE - only triggers once per press
+        // Jump
         else if(this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::W){
             if(this->player->getCanJump())
                 this->player->jump();
@@ -310,13 +344,20 @@ void Game::renderPlayer(){
 }
 void Game::render(){
     // Clearing window
-    this->window.clear(sf::Color::White);
+    this->window.clear();
 
     // apply camera
 
     this->window.setView(this->view);
 
     // Rendering level
+
+    // Render background FIRST (behind everything)
+    this->backgroundSprite.setPosition(
+        this->view.getCenter().x - 640.f,  // Center on view
+        0.f
+    );
+    this->window.draw(this->backgroundSprite);
 
     this->level->render(this->window);
 

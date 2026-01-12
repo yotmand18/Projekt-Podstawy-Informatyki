@@ -2,7 +2,41 @@
 
 _( nie ma tu zbyt wiele )_
 
-## Obecnie zaimplementowane mechaniki:
+## Struktura repozytorium
+
+.
+│
+├── src
+│   └── pliki .cpp i .h
+├── levels
+│   └── pliki tekstowe zawierające zawartość poziomów
+└── textures
+    ├── backgrounds
+    │   └── tła poszczególnych poziomów
+    ├── enemies
+    │   └── stylesheets dla przeciników
+    ├── platforms
+    │   └── tekstury platform
+    └── player
+        └── stylesheet dla gracza
+
+#### Struktura posiadania bibiliotek:
+
+project.cpp
+└── Game.h - Game.cpp
+    ├── Input.h
+    │   └── lib.h
+    ├── Player.h
+    │   └── Physics.h
+    │       └── lib.h
+    └── Level.h
+        ├── Enemy.h
+        │   └── Physics.h
+        │       └── lib.h
+        └── Platform.h
+            └── lib.h
+        
+## Obecnie zaimplementowane mechaniki
 * lib.h / lib.cpp
   - centralne miejsce dla wszystkich bibliotek (SFML, STD)
   - wspólne includy dla całego projektu
@@ -102,21 +136,68 @@ enemy 1500 440 160 160 ghoul 1500 2500
   - updateowanie klas
   - renderowanie tekstur
  
-#### TODO
+## TODO
+
+#### Gameplay / Techniczne
 - [x] przeciwnicy
 - [x] mechaniki walki
-- [ ] śmierć gracza, ekran końcowy
-- [ ] system punktów
+- [x] zmiana wielkości okna
+- [ ] koniec gry:
+  - [ ] ekran przegranej - śmierci (restart/menu)
+  - [ ] ekran zwycięstwa
+  - [ ] statystyki? (czas, zabici wrogowie, punkty)
+- [ ] system progresji:
+  - [ ] punkty za zabijanie wrogów
+  - [ ] system levelu gracza?
+  - [ ] ulepszenia? (więcej życia, silniejszy atak)
+- [ ] menu główne:
+  - [ ] new Game
+  - [ ] continue (load save)
+  - [ ] options (rebind keys, volume)
+  - [ ] exit
 - [ ] powerupy / modyfikatory w levelach
-- [ ] menu główne
 - [ ] interfejs
+  - [ ] ilość punktów życia
+  - [ ] ilość zdobytych punktów
+  - [ ] guzik menu
 - [ ] możliwość zmiany przypisania klawiszy
-- [ ] zapisywanie / ładowanie gry
-- [ ] projektowanie poziomów
 - [ ] dźwięk i muzyka?
+- [ ] zapisywanie / ładowanie gry?
 
- ## Grafika
- TODO:
- * tekstury różnych przeciwników i animacje chodzenia dla nich, ewentualnie też ataku
- * tekstury różnych platform
- * **Tło**
+#### Grafika
+ - [ ] tekstury różnych przeciwników i animacje chodzenia dla nich, ewentualnie też ataku:
+%% przykładowe, przeciwnicy do ustalenia z projektem %%
+  - [ ] drownee.png
+  - [ ] nekker.png
+  - [ ] ghoul.png
+  - [ ] wraith.png
+  - [ ] griffin.png
+ - [ ] tekstury różnych platform - w zależności od poziomów
+ - [ ] tła różnych poziomów - w zależności od poziomów
+ 
+#### Projektowanie
+ - [ ] wymyślenie historii:
+  - [ ] główny cel (boss?)
+  - [ ] narracja między poziomami?
+ - [ ] ilość poziomów?
+ - [ ] czym jest poszczególny poziom - np. las, miasto itd.
+ - [ ] zaprojektowanie poziomów - ułożenie platform, przeciwników w odpowiednich miejscach
+ 
+## Wersja 0.2
+* Dodanie kamery podążającej za graczem
+* Edycja struktury plików poziomu w ./levels/
+  - obiekt zaczyna się od typu obiektu: "platform" lub "enemy"
+  - dla typu "enemy" zapisuje się: koordynaty, szerokość, wysokość, lewą granica strfy patrolowania, nazwę tekstury / rodzaju przeciwnika, prawą granicę strefy patrolowania
+* Dodanie klasy Enemy.h
+* Edycja Level.h - uwzględnienie przeciwników
+* Dodanie klasy Physics.h, przeniesienie obliczania fizyki z Player.h, zarówno przeciwnicy jak i gracz korzystają z fizyki
+* Dodanie mechaniki ataku, tracenia i zyskiwania życia
+* zmiana nazwy main.cpp na project.cpp
+
+## Wersja 0.2.1
+* Przeciwnicy kolidują z platformami, potrafią skakać
+* Gra się wyłącza po straceniu życia przez gracza
+* Dodanie możliwości zmiany wielkości okna
+* Dodanie możliwości wczytania tła
+* Dodanie CMakeLists.txt
+* Przeniesienie plików źródłowych do ./src

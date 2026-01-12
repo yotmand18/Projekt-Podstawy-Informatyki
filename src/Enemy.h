@@ -1,6 +1,5 @@
 #pragma once
 
-#include "lib.h"
 #include "Physics.h"
 
 enum ENEMY_TYPE {
