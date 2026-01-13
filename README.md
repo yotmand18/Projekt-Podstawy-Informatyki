@@ -157,7 +157,7 @@ enemy 1500 440 160 160 ghoul 1500 2500
   - [ ] new Game
   - [ ] continue (load save)
   - [ ] options (rebind keys, volume)
-  - [ ] exit
+  - [x] exit
 - [ ] powerupy / modyfikatory w levelach
 - [ ] interfejs
   - [ ] ilość punktów życia

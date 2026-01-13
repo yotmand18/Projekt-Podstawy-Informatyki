@@ -46,28 +46,11 @@ bool Player::getCanSwitchAnim(){
         canSwitchAnimation = false;
     return anim_switch;
 }
-
-const sf::Vector2f Player::getPosition() const{
-    return this->sprite.getPosition();
-}
-
 const sf::FloatRect Player::getGlobalBounds() const{
     sf::FloatRect bounds = this->hitbox;
     bounds.left = this->sprite.getPosition().x;
     bounds.top = this->sprite.getPosition().y;
     return bounds;
-}
-
-sf::Vector2f Player::getVelocity() const{
-    return this->physics->getVelocity();
-}
-
-int Player::getHealth() const{
-    return this->health;
-}
-
-bool Player::isAlive() const{
-    return (this->health > 0);
 }
 
 sf::FloatRect Player::getAttackBounds() const{

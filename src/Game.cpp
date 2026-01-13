@@ -12,6 +12,10 @@ void Game::initWindow(){
 
 }
 
+void Game::initUI(){
+    this->ui = new UI();
+}
+
 void Game::initTextures(){
     if(!this->playerTextureSheet.loadFromFile("./textures/player/player_stylesheet.png"))
         std::cout << "ERROR::GAME::Failed to load player texture\n";
@@ -51,6 +55,7 @@ void Game::initPlayer(){
 
 Game::Game(){
     this->initWindow();
+    this->initUI();
     this->initTextures();
     this->initInput();
     this->initLevel();
@@ -61,6 +66,7 @@ Game::~Game(){
     delete this->input;
     delete this->player;
     delete this->level;
+    delete this->ui;
 }
 
 // Functions
@@ -290,83 +296,146 @@ void Game::updateCombat() {
 }
 
 void Game::update(){
-    // Polling window events
     while(this->window.pollEvent(this->ev)){
         if(this->ev.type == sf::Event::Closed)
             this->window.close();
-        else if(this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Escape)
-            this->window.close();
-
-        // Handle window resize
         else if(this->ev.type == sf::Event::Resized){
-            // Calculate aspect ratios
-            float windowRatio = static_cast<float>(this->ev.size.width) / static_cast<float>(this->ev.size.height);
-            float viewRatio = this->view.getSize().x / this->view.getSize().y;  // 1280/720 = 16:9
-            
-            sf::FloatRect viewport;
-            
-            if(windowRatio > viewRatio){
-                // Window is wider - add pillarboxes (black bars on sides)
-                float viewportWidth = viewRatio / windowRatio;
-                viewport = sf::FloatRect((1.f - viewportWidth) / 2.f, 0.f, viewportWidth, 1.f);
-            } else {
-                // Window is taller - add letterboxes (black bars top/bottom)
-                float viewportHeight = windowRatio / viewRatio;
-                viewport = sf::FloatRect(0.f, (1.f - viewportHeight) / 2.f, 1.f, viewportHeight);
-            }
-            
-            this->view.setViewport(viewport);
+            // ... resize handling
         }
         
-        // Jump
-        else if(this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::W){
-            if(this->player->getCanJump())
-                this->player->jump();
+        // Handle UI based on state
+        if(this->ui->getGameState() == GameState::MAINMENU){
+            this->ui->handleMainMenuInput(this->ev);
+            
+            if(this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Return){
+                int selection = this->ui->getMenuSelection();
+                switch(selection){
+                    case 0:  // New Game
+                        this->ui->setState(GameState::PLAYING);
+                        break;
+                    case 1:  // Continue
+                        // TODO: Load save
+                        this->ui->setState(GameState::PLAYING);
+                        break;
+                    case 2:  // Options
+                        // TODO
+                        break;
+                    case 3:  // Exit
+                        this->window.close();
+                        break;
+                }
+            }
+            return;  // Don't update game while in menu
+        }else if(this->ui->getGameState() == GameState::PAUSED){
+            this->ui->handlePauseMenuInput(this->ev);
+            
+            if(this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Return){
+                int selection = this->ui->getPauseSelection();
+                switch(selection){
+                    case 0:  // Resume
+                        this->ui->setState(GameState::PLAYING);
+                        break;
+                    case 1:  // Main Menu
+                        // TODO: Restart level
+                        this->ui->setState(GameState::MAINMENU);
+                        break;
+                    case 2:  // Options
+                        // TODO
+                        break;
+                    case 3:  // EXIT
+                        this->window.close();
+                        break;
+                }
+            }
+            return;  // Don't update game while paused
+        }else if(this->ui->getGameState() == GameState::GAMEOVER || this->ui->getGameState() == GameState::VICTORY){
+            this->ui->handleGameOverMenuInput(this->ev);
+            
+            if(this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Return){
+                int selection = this->ui->getGameOverSelection();
+                switch(selection){
+                    case 0:  // Main Menu
+                        this->ui->setState(GameState::MAINMENU);
+                        break;
+                    case 1:  // EXIT
+                        this->window.close();
+                        break;
+                }
+            }
+            return;  // Don't update game while paused
+        }
+        
+        // Game events (only during gameplay)
+        if(this->ui->getGameState() == GameState::PLAYING){
+            if(this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Escape){
+                this->ui->setState(GameState::PAUSED);
+            }
+            else if(this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::W){
+                if(this->player->getCanJump())
+                    this->player->jump();
+            }
         }
     }
+    
+    // Only update game if playing
+    if(this->ui->getGameState() == GameState::PLAYING){
+        this->updateInput();
+        this->updatePlayer();
+        this->updateCollision();
+        this->level->update(this->player->getPosition(), this->view);
+        this->updateCombat();
+        this->updateView();
 
-    this->updateInput();
-    this->updatePlayer();
-    //this->level->update();
-    this->updateCollision();
-    this->updateCombat();
+        // Game Over
 
-    this->updateView();
-    this->level->update(this->player->getPosition(), this->view);
-
-    if(!this->player->isAlive()){
-        this->gameOver = true;
+        if(!this->player->isAlive())
+            this->ui->setState(GameState::GAMEOVER);
+        
+        // Update HUD
+        this->ui->updateHUD(
+            this->player->getHealth(), 
+            this->player->getMaxHealth(), 
+            this->player->getPoints(),
+            1 // TODO
+        );
     }
 }
 
 void Game::renderPlayer(){
     this->player->render(this->window);
 }
+
 void Game::render(){
-    // Clearing window
-    this->window.clear();
-
-    // apply camera
-
-    this->window.setView(this->view);
-
-    // Rendering level
-
-    // Render background FIRST (behind everything)
-    this->backgroundSprite.setPosition(
-        this->view.getCenter().x - 640.f,  // Center on view
-        0.f
-    );
-    this->window.draw(this->backgroundSprite);
-
-    this->level->render(this->window);
-
-    // Rendering player
-
-    this->renderPlayer();
-
-    // Displaynig
-
+    this->window.clear(sf::Color(20, 20, 30));
+    
+    // Main menu
+    if(this->ui->getGameState() == GameState::MAINMENU){
+        this->ui->render(this->window);
+        this->window.display();
+        return;
+    }
+    
+    // Game rendering
+    if(this->ui->getGameState() == GameState::PLAYING || this->ui->getGameState() == GameState::PAUSED){
+        this->window.setView(this->view);
+        this->level->render(this->window);
+        this->renderPlayer();
+        
+        // Render HUD on top (reset to default view for fixed position)
+        this->window.setView(this->window.getDefaultView());
+        this->ui->renderHUD(this->window);
+        
+        // Render pause menu on top if paused
+        if(this->ui->getGameState() == GameState::PAUSED){
+            this->ui->renderPauseMenu(this->window);
+        }
+    }
+    
+    // Game over / Victory
+    if(this->ui->getGameState() == GameState::GAMEOVER || this->ui->getGameState() == GameState::VICTORY){
+        this->ui->render(this->window);
+    }
+    
     this->window.display();
 }
 

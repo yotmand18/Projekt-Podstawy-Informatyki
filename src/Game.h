@@ -3,6 +3,7 @@
 #include "Player.h"
 #include "Input.h"
 #include "Level.h"
+#include "UI.h"
 
 class Game{
     private:
@@ -20,6 +21,7 @@ class Game{
 
         // Class
 
+        UI* ui;
         Player* player;
         Input* input;
         Level* level;
@@ -27,6 +29,7 @@ class Game{
         // Initialization
 
         void initWindow();
+        void initUI();
         void initTextures();
         void initInput();
         void initLevel();

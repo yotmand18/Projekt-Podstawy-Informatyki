@@ -44,17 +44,22 @@ class Player{
 
         // Accessors
         bool getCanSwitchAnim();
-        const sf::Vector2f getPosition() const;
         const sf::FloatRect getGlobalBounds() const;
-        sf::Vector2f getVelocity() const;
-        int getHealth() const;
-        bool isAlive() const;
-        sf::FloatRect getAttackBounds() const;
+
+        const sf::Vector2f getPosition() const { return sprite.getPosition(); };
         inline const sf::Vector2f getPrevPosition() const { return previousPosition; }
+        inline sf::Vector2f getVelocity() const { return physics->getVelocity(); };
+
+        sf::FloatRect getAttackBounds() const;
 
         inline bool isAttacking() const { return animState == ATTACKING; }
-        inline int getPoints() const { return points; }
         inline bool hasAttackHit() const { return hasDealtDamage; }
+
+        inline int getHealth() const { return health; }
+        inline int getMaxHealth() const { return maxHealth; };
+        inline int getPoints() const { return points; }
+        bool isAlive() const { return (health > 0); };
+        
         inline bool getCanJump() const { return physics->getCanJump(); }
 
         // Modifiers
