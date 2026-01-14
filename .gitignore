@@ -1,26 +1,27 @@
-# ---- build system ----
+# ---- Build directories ----
 build/
-
-# CMake-generated files
-compile_commands.json
-CMakeCache.txt
 CMakeFiles/
+CMakeCache.txt
 cmake_install.cmake
 Makefile
+compile_commands.json
 
-# ---- executables ----
+# ---- Executables ----
+PI_project
 game
 
-# ---- scripts not to push ----
+# ---- Scripts ----
 game.sh
 
-# ---- editor / backup files ----
+# ---- Editor / backup files ----
 *~
 *.bak
 *.swp
 
-# ---- assets backups (explicit) ----
+# ---- Asset backups / temp files ----
 textures/**/**~
+fonts/**/**~
 
-# ---- cache ----
+# ---- Cache / system files ----
 .cache/
+.DS_Store
