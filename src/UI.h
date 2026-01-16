@@ -16,6 +16,8 @@ class UI{
         sf::Font font;
         GameState currentState;
 
+        std::string assetRoot;
+
         // Defaults
 
         unsigned characterTitle = 100;
@@ -67,8 +69,7 @@ class UI{
 
     public:
         // Constructors / Destructors
-
-        UI();
+        explicit UI(const std::string& assetRoot);
         virtual ~UI();
 
         // Accessors

@@ -4,6 +4,7 @@
 #include "Input.h"
 #include "Level.h"
 #include "UI.h"
+#include "PathUtils.h"
 
 class Game{
     private:
@@ -18,6 +19,8 @@ class Game{
         sf::Sprite backgroundSprite;
         // sf::Font font;
         // sf::Text gameOverText;
+
+        std::string assetRoot;
 
         // Class
 

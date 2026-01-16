@@ -13,17 +13,17 @@ void Game::initWindow(){
 }
 
 void Game::initUI(){
-    this->ui = new UI();
+    this->ui = new UI(assetRoot);
 }
 
 void Game::initTextures(){
-    if(!this->playerTextureSheet.loadFromFile("./textures/player/player_stylesheet.png"))
+    if(!this->playerTextureSheet.loadFromFile(assetRoot + "/textures/player/player_stylesheet.png"))
         std::cout << "ERROR::GAME::Failed to load player texture\n";
     else
         this->playerTextureSheet.setSmooth(false);
     
     // Load background
-    if(!this->backgroundTexture.loadFromFile("./textures/backgrounds/level1.png"))
+    if(!this->backgroundTexture.loadFromFile(assetRoot + "/textures/backgrounds/level1.png"))
         std::cout << "ERROR::GAME::Failed to load background\n";
     else {
         this->backgroundTexture.setSmooth(false);
@@ -41,8 +41,8 @@ void Game::initInput(){
 }
 
 void Game::initLevel(){
-    this->level = new Level();
-    if(!this->level->loadFromFile("./levels/level1.txt"))
+    this->level = new Level(assetRoot);
+    if(!this->level->loadFromFile(assetRoot + "/levels/level1.txt"))
         std::cout << "ERROR::GAME::Failed to load level\n";
 }
 
@@ -53,15 +53,21 @@ void Game::initPlayer(){
 
 // Constructors / Destructors
 
-Game::Game(){
+Game::Game()
+    : level(nullptr), ui(nullptr)
+{
+    // Assets are relative to the executable folder
+    assetRoot = getExecutableDir();  // no "..", no trailing slash
+
     this->initWindow();
     this->initUI();
     this->initTextures();
     this->initInput();
     this->initLevel();
     this->initPlayer();
-
 }
+
+
 Game::~Game(){
     delete this->input;
     delete this->player;

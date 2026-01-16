@@ -3,7 +3,7 @@
 // Initialization
 
 void UI::initFont(){
-    if(!this->font.loadFromFile("./fonts/thewitcher-font/thewitcher-font.ttf")){
+    if(!this->font.loadFromFile(assetRoot + "/fonts/thewitcher-font/thewitcher-font.ttf")){
         std::cout << "ERROR::UI::Failed to load font\n";
     }
 }
@@ -116,16 +116,16 @@ void UI::initGameOverMenu(bool didWin){
 }
 
 // Constructors / Destructors
-
-UI::UI(){
-    this->currentState = GameState::MAINMENU;
-
+UI::UI(const std::string& root)
+    : assetRoot(root), currentState(GameState::MAINMENU)
+{
     this->initFont();
     this->initMainMenu();
     this->initHUD();
     this->initPauseMenu();
     this->initGameOverMenu(this->currentState == GameState::VICTORY);
 }
+
 
 UI::~UI(){
 
