@@ -4,6 +4,7 @@
 #include "Input.h"
 #include "Level.h"
 #include "UI.h"
+#include "Settings.h"
 
 class Game{
     private:
@@ -21,6 +22,7 @@ class Game{
 
         // Class
 
+        Settings settings;
         UI* ui;
         Player* player;
         Input* input;

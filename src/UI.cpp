@@ -1,4 +1,5 @@
 #include "UI.h"
+#include "Settings.h"
 
 // Initialization
 
@@ -18,7 +19,7 @@ void UI::initMainMenu(){
     this->menuTitle.setPosition(350.f, 100.f);
 
     // Menu options
-    std::vector<std::string> options = { "New Game", "Continue", "Options", "Exit" };
+    std::vector<std::string> options = { "New Game", "Continue", "Exit" };
     
     for(size_t i = 0; i < options.size(); i++){
         sf::Text text;
@@ -34,6 +35,35 @@ void UI::initMainMenu(){
     // Highlight first option
     this->menuOptions[0].setFillColor(this->colorSelected);
 }
+
+void UI::initSettingsMenu(){
+    this->menuSelectedOption = 0;
+
+    this->menuTitle.setFont(this->font);
+    this->menuTitle.setString("SETTINGS");
+    this->menuTitle.setCharacterSize(this->characterTitle);
+    this->menuTitle.setFillColor(this->colorTitle);
+    this->menuTitle.setPosition(350.f, 100.f);
+
+    // Menu options
+    std::vector<std::string> options = { "Resolution", "Difficilty", "Move Left", "Move Right", "Jump", "Attack", "Run", "Menu" };
+    std::vector<std::string> currentSettings;
+    
+    for(size_t i = 0; i < options.size(); i++){
+        sf::Text text;
+        text.setFont(this->font);   
+        text.setString(options[i]);
+        text.setCharacterSize(this->characterSecondary);
+        text.setFillColor(this->colorNormal);
+        text.setPosition(500.f, 300.f + i * 80.f);
+        
+        this->menuOptions.push_back(text);
+    }
+    
+    // Highlight first option
+    this->menuOptions[0].setFillColor(this->colorSelected);
+}
+
 
 void UI::initHUD(){
     healthText.setFont(this->font);   
@@ -63,7 +93,7 @@ void UI::initPauseMenu(){
     this->pausedTitle.setPosition(350.f, 100.f);
 
     // Menu options
-    std::vector<std::string> options = { "Continue", "Main Menu", "Options", "Exit" };
+    std::vector<std::string> options = { "Continue", "Main Menu", "Exit" };
     
     for(size_t i = 0; i < options.size(); i++){
         sf::Text text;
@@ -132,81 +162,48 @@ UI::~UI(){
 
 }
 
+// Functions
+
+void UI::setSettings(Settings* settings){
+
+}
+
+void UI::navigateMenu(std::vector<sf::Text>& options, int& selected, const sf::Event& ev){
+    if (ev.type == sf::Event::KeyPressed) {
+        
+        options[selected].setFillColor(sf::Color::White);
+
+        if (ev.key.code == sf::Keyboard::Up) {
+            selected--;
+            if (selected < 0) 
+                selected = options.size() - 1;
+        } 
+        else if (ev.key.code == sf::Keyboard::Down) {
+            selected++;
+            if (selected >= (int)options.size()) 
+                selected = 0; // Pełne zawijanie
+        }
+
+        options[selected].setFillColor(this->colorSelected);
+    }
+}
+
 // Event handling
 
 void UI::handleMainMenuInput(const sf::Event& ev){
-    if(ev.type == sf::Event::KeyPressed){
-        if(ev.key.code == sf::Keyboard::Up){
-            // Move down an option
-            this->menuOptions[this->menuSelectedOption].setFillColor(sf::Color::White);
-            this->menuSelectedOption--;
+    navigateMenu(this->menuOptions, this->menuSelectedOption, ev);
+}
 
-            if(this->menuSelectedOption < 0)
-                this->menuSelectedOption = menuOptions.size() - 1;
-
-            this->menuOptions[this->menuSelectedOption].setFillColor(this->colorSelected);
-
-        }else if(ev.key.code == sf::Keyboard::Down){
-            // Move up an option
-            this->menuOptions[this->menuSelectedOption].setFillColor(sf::Color::White);
-            this->menuSelectedOption++;
-
-            if(this->menuSelectedOption > menuOptions.size() - 1)
-                this->menuSelectedOption = menuOptions.size() - 1;
-
-            this->menuOptions[this->menuSelectedOption].setFillColor(this->colorSelected);
-        }
-    }
+void UI::handleSettingsMenuInput(const sf::Event& ev){
+    navigateMenu(this->settingsOptions, this->settingsSelectedOptions, ev);
 }
 
 void UI::handlePauseMenuInput(const sf::Event& ev){
-    if(ev.type == sf::Event::KeyPressed){
-        if(ev.key.code == sf::Keyboard::Up){
-            // Move down an option
-            this->pauseOptions[this->pauseSelectedOption].setFillColor(sf::Color::White);
-            this->pauseSelectedOption--;
-
-            if(this->pauseSelectedOption < 0)
-                this->pauseSelectedOption = pauseOptions.size() - 1;
-
-            this->pauseOptions[this->pauseSelectedOption].setFillColor(this->colorSelected);
-
-        }else if(ev.key.code == sf::Keyboard::Down){
-            // Move up an option
-            this->pauseOptions[this->pauseSelectedOption].setFillColor(sf::Color::White);
-            this->pauseSelectedOption++;
-
-            if(this->pauseSelectedOption > pauseOptions.size() - 1)
-                this->pauseSelectedOption = pauseOptions.size() - 1;
-
-            this->pauseOptions[this->pauseSelectedOption].setFillColor(this->colorSelected);
-        }
-    }
+    navigateMenu(this->pauseOptions, this->pauseSelectedOption, ev);
 }
 
 void UI::handleGameOverMenuInput(const sf::Event& ev){
-    if(ev.type == sf::Event::KeyPressed){
-        if(ev.key.code == sf::Keyboard::Up){
-            // Move down an option
-            this->gameOverOptions[this->gameOverSelectedOption].setFillColor(sf::Color::White);
-            this->gameOverSelectedOption--;
-
-            if(this->gameOverSelectedOption < 0)
-                this->gameOverSelectedOption = gameOverOptions.size() - 1;
-
-            this->gameOverOptions[this->gameOverSelectedOption].setFillColor(this->colorSelected);
-
-        }else if(ev.key.code == sf::Keyboard::Down){
-            // Move up an option
-            this->gameOverOptions[this->gameOverSelectedOption].setFillColor(sf::Color::White);
-            this->gameOverSelectedOption++;
-
-            if(this->gameOverSelectedOption > gameOverOptions.size() - 1)
-                this->gameOverSelectedOption = gameOverOptions.size() - 1;
-
-            this->gameOverOptions[this->gameOverSelectedOption].setFillColor(this->colorSelected);
-        }
-    }
+    navigateMenu(this->gameOverOptions, this->gameOverSelectedOption, ev);
 }
 
 // Update

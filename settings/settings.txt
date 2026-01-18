@@ -1,0 +1,10 @@
+resolution 1280 720
+difficulty normal
+
+# keybinds
+bind MOVE_LEFT 0
+bind MOVE_RIGHT 3
+bind JUMP 22
+bind ATTACK 9
+bind RUN 38
+bind MENU 36

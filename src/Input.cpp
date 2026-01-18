@@ -1,34 +1,15 @@
 #include "Input.h"
+#include "Settings.h"
 
-// Constructors / Destructors
-
-Input::Input(){
-    // Default keybindings
-    this->moveLeft = sf::Keyboard::Key::A;
-    this->moveRight = sf::Keyboard::Key::D;
-    this->jump = sf::Keyboard::Key::W;
-    this->attack = sf::Keyboard::Key::J;
-    this->run = sf::Keyboard::Key::LShift;
-
+Input::Input(Settings* the_settings){
+    this->settings = new Settings();
 }
+
 Input::~Input(){
 
 }
 
-bool Input::isMoveLeft() const {
-    return sf::Keyboard::isKeyPressed(this->moveLeft);
-}
-
-bool Input::isMoveRight() const {
-    return sf::Keyboard::isKeyPressed(this->moveRight);
-}
-
-bool Input::isJump() const {
-    return sf::Keyboard::isKeyPressed(this->jump);
-}
-bool Input::isAttack() const {
-    return sf::Keyboard::isKeyPressed(this->attack);
-}
-bool Input::isRunning() const{
-    return sf::Keyboard::isKeyPressed(this->run);
+bool Input::isAction(std::string action) const {
+    if (!settings) return false;
+    return sf::Keyboard::isKeyPressed(settings->getKeybind(action));
 }

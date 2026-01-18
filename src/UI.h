@@ -4,17 +4,24 @@
 
 enum class GameState {
     MAINMENU,
+    SETTINGS,
     PLAYING,
     PAUSED,
     GAMEOVER,
     VICTORY
 };
 
+class Settings;
+
 class UI{
     private:
         // Core
         sf::Font font;
         GameState currentState;
+
+        // Class include
+
+        Settings* settings;
 
         // Defaults
 
@@ -36,22 +43,33 @@ class UI{
         sf::Text menuTitle;
         std::vector<sf::Text> menuOptions;
         int menuSelectedOption;
+        void initMainMenu();
+
+        // Settings Menu
+
+        sf::Text settingsTitle;
+        std::vector<sf::Text> settingsOptions;
+        int settingsSelectedOptions;
+        void initSettingsMenu();
 
         // HUD
 
         sf::Text healthText;
         sf::Text scoreText;
         sf::Text levelText;
+        void initHUD();
 
         // Pause Manu
         sf::Text pausedTitle;
         std::vector<sf::Text> pauseOptions;
         int pauseSelectedOption;
+        void initPauseMenu();
 
         // GameOver Menu
         sf::Text gameOverTitle;
         std::vector <sf::Text> gameOverOptions;
         int gameOverSelectedOption;
+        void initGameOverMenu(bool didWin);
 
         // Victory Menu
         sf::Text victoryTitle;
@@ -60,10 +78,6 @@ class UI{
         // Initialization
 
         void initFont();
-        void initMainMenu();
-        void initHUD();
-        void initPauseMenu();
-        void initGameOverMenu(bool didWin);
 
     public:
         // Constructors / Destructors
@@ -80,9 +94,15 @@ class UI{
         // Modifiers
         inline void setState(GameState state) { this->currentState = state; };
 
+        // Functions
+
+        void setSettings(Settings* settings);
+        void navigateMenu(std::vector<sf::Text>& options, int& selected, const sf::Event& ev);
+
         // Event handling 
 
         void handleMainMenuInput(const sf::Event& ev);
+        void handleSettingsMenuInput(const sf::Event& ev);
         void handlePauseMenuInput(const sf::Event& ev);
         void handleGameOverMenuInput(const sf::Event& ev);
 

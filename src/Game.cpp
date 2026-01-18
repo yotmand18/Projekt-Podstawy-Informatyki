@@ -3,8 +3,13 @@
 // Initialization
 
 void Game::initWindow(){
-    this->window.create(sf::VideoMode(1280, 720), "Game", sf::Style::Close | sf::Style::Titlebar | sf::Style::Resize);
-    this->window.setFramerateLimit(60);
+    sf::Vector2u res = this->settings.getResolution();
+
+    this->window.create(
+        sf::VideoMode(res.x, res.y),
+        "Game",
+        sf::Style::Close | sf::Style::Titlebar | sf::Style::Resize
+    );    this->window.setFramerateLimit(60);
 
     // Initialize view
     this->view.setSize(1280.f, 720.f);
@@ -14,6 +19,7 @@ void Game::initWindow(){
 
 void Game::initUI(){
     this->ui = new UI();
+    this->ui->setSettings(&this->settings);
 }
 
 void Game::initTextures(){
@@ -23,7 +29,7 @@ void Game::initTextures(){
         this->playerTextureSheet.setSmooth(false);
     
     // Load background
-    if(!this->backgroundTexture.loadFromFile("./textures/backgrounds/level1.png"))
+    if(!this->backgroundTexture.loadFromFile("./textures/backgrounds/background.png"))
         std::cout << "ERROR::GAME::Failed to load background\n";
     else {
         this->backgroundTexture.setSmooth(false);
@@ -37,7 +43,7 @@ void Game::initTextures(){
 }
 
 void Game::initInput(){
-    this->input = new Input();
+    this->input = new Input(&this->settings);
 }
 
 void Game::initLevel(){
@@ -54,6 +60,8 @@ void Game::initPlayer(){
 // Constructors / Destructors
 
 Game::Game(){
+    this->settings.loadFromFile();
+
     this->initWindow();
     this->initUI();
     this->initTextures();
@@ -75,18 +83,18 @@ void Game::updateInput(){
     float moveSpeed = 2.f;
     
     // Check if running
-    if(this->input->isRunning())
+    if(this->input->isAction("RUN"))
         moveSpeed = 6.f;  // 2x speed when running
     
     float moveX = 0.f;
     
-    if (this->input->isMoveLeft()) moveX -= moveSpeed;
-    if (this->input->isMoveRight()) moveX += moveSpeed;
+    if (this->input->isAction("MOVE_LEFT")) moveX -= moveSpeed;
+    if (this->input->isAction("MOVE_RIGHT")) moveX += moveSpeed;
     
     this->player->move(moveX, 0.f);
 
     // Only allow attack if not already attacking
-    if(this->input->isAttack() && !this->player->isAttacking())
+    if(this->input->isAction("ATTACK") && !this->player->isAttacking())
         this->player->setAnimState(ATTACKING);
 }
 
@@ -128,7 +136,9 @@ void Game::updateCollision(){
             prevBounds.top + prevBounds.height > plat.top &&
             prevBounds.top < plat.top + plat.height;
 
-            if (penX < penY && cameFromSide) {
+            bool falling = prevPos.y < bounds.top;
+
+            if (penX < penY && cameFromSide && !falling) {
                 // -------- horizontal --------
                 if (prevPos.x + bounds.width <= plat.left){
                     // came from left
@@ -317,10 +327,7 @@ void Game::update(){
                         // TODO: Load save
                         this->ui->setState(GameState::PLAYING);
                         break;
-                    case 2:  // Options
-                        // TODO
-                        break;
-                    case 3:  // Exit
+                    case 2:  // Exit
                         this->window.close();
                         break;
                 }
@@ -339,10 +346,7 @@ void Game::update(){
                         // TODO: Restart level
                         this->ui->setState(GameState::MAINMENU);
                         break;
-                    case 2:  // Options
-                        // TODO
-                        break;
-                    case 3:  // EXIT
+                    case 2:  // EXIT
                         this->window.close();
                         break;
                 }
