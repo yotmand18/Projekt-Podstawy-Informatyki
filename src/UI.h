@@ -30,7 +30,10 @@ class UI{
         sf::Color colorTitle = sf::Color(180, 180, 180);       // Silver
         sf::Color colorBackground = sf::Color(20, 20, 30);     // Dark blue-ish
         sf::Color colorHealth = sf::Color(200, 50, 50);        // Dark red
-        sf::Color colorScore = sf::Color(255, 215, 0);         // Gold
+        sf::Color colorScore = sf::Color(255, 215, 0);        // Dark red
+        sf::Color colorHpPotions= sf::Color(244, 111, 34);        // orange
+        sf::Color colorAttackPotions = sf::Color(23, 212, 215);        // Cyan
+        sf::Color colorSpeedPotions = sf::Color(148, 48, 187);         // Purple
 
 
         // Main Menu
@@ -44,6 +47,12 @@ class UI{
         sf::Text healthText;
         sf::Text scoreText;
         sf::Text levelText;
+        sf::Text HealthPotions;
+        sf::Sprite HealthPotionsIcon;
+        sf::Text SpeedPotions;
+        sf::Sprite SpeedPotionsIcon;
+        sf::Text AttackPotions;
+        sf::Sprite AttackPotionsIcon;
 
         // Pause Manu
         sf::Text pausedTitle;
@@ -89,7 +98,7 @@ class UI{
 
         // Update
 
-        void updateHUD(int health, int maxHealth, int score, int level);
+        void updateHUD(int health, int maxHealth, int score, int level, int Health_Potions, int Speed_Potions, int Attack_Potions);
         void update();
 
         // Render

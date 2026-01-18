@@ -46,10 +46,25 @@ void UI::initHUD(){
     scoreText.setFillColor(this->colorScore);
     scoreText.setPosition(1000.f, 25.f);
 
-    levelText.setFont(this->font);   
+    levelText.setFont(this->font);
     levelText.setCharacterSize(this->characterHUD);
     levelText.setFillColor(this->colorNormal);
     levelText.setPosition(1000.f, 50.f);
+
+    HealthPotions.setFont(this->font);
+    HealthPotions.setCharacterSize(this->characterHUD);
+    HealthPotions.setFillColor(this->colorHpPotions);
+    HealthPotions.setPosition(5.f, 5.f);
+
+    SpeedPotions.setFont(this->font);
+    SpeedPotions.setCharacterSize(this->characterHUD);
+    SpeedPotions.setFillColor(this->colorSpeedPotions);
+    SpeedPotions.setPosition(5.f, 30.f);
+
+    AttackPotions.setFont(this->font);
+    AttackPotions.setCharacterSize(this->characterHUD);
+    AttackPotions.setFillColor(this->colorAttackPotions);
+    AttackPotions.setPosition(5.f, 55.f);
 }
 
 void UI::initPauseMenu(){
@@ -211,10 +226,13 @@ void UI::handleGameOverMenuInput(const sf::Event& ev){
 
 // Update
 
-void UI::updateHUD(int health, int maxHealth, int score, int level){
+void UI::updateHUD(int health, int maxHealth, int score, int level, int Health_Potions, int Speed_Potions, int Attack_Potions){
     this->healthText.setString("Health: " + std::to_string(health) + "/" + std::to_string(maxHealth));
     this->scoreText.setString("Score: " + std::to_string(score));
-    this->levelText.setString("Level: " + std::to_string(level)); 
+    this->levelText.setString("Level: " + std::to_string(level));
+    this->HealthPotions.setString(std::to_string(Health_Potions));
+    this->SpeedPotions.setString(std::to_string(Speed_Potions));
+    this->AttackPotions.setString(std::to_string(Attack_Potions));
 }
 
 void UI::update(){
@@ -234,6 +252,9 @@ void UI::renderHUD(sf::RenderTarget& target){
     target.draw(this->healthText);
     target.draw(this->scoreText);
     target.draw(this->levelText);
+    target.draw(this->HealthPotions);
+    target.draw(this->SpeedPotions);
+    target.draw(this->AttackPotions);
 }
 
 void UI::renderPauseMenu(sf::RenderTarget& target){

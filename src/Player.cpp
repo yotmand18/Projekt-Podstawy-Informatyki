@@ -10,7 +10,7 @@ void Player::initAnimations(){
 }
 
 void Player::initStats(){
-    this->health = 15;
+    this->health = 50;
     this->maxHealth = 100;
     this->points = 0;
     this->damageCooldown = 1.f;
@@ -18,6 +18,9 @@ void Player::initStats(){
     this->gainedHealth = false;
     this->hasDealtDamage = false;
     this->facingRight = true;
+    this->HealthPotions = 1;
+    this->SpeedPotions= 1;
+    this->AttackPotions = 1;
 }
 
 // Constructors / Destructors

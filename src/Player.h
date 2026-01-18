@@ -20,6 +20,9 @@ class Player{
         int health;
         int maxHealth;
         int points;
+        int HealthPotions;
+        int SpeedPotions;
+        int AttackPotions;
 
         // Player flags
         bool lostHealth;
@@ -57,7 +60,10 @@ class Player{
 
         inline int getHealth() const { return health; }
         inline int getMaxHealth() const { return maxHealth; };
-        inline int getPoints() const { return points; }
+        inline int getPoints() const { return points; };
+        inline int getHealthPotions() const { return HealthPotions; };
+        inline int getSpeedPotions() const { return SpeedPotions; };
+        inline int getAttackPotions() const { return AttackPotions; };
         bool isAlive() const { return (health > 0); };
         
         inline bool getCanJump() const { return physics->getCanJump(); }

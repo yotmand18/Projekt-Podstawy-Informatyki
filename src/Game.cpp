@@ -402,6 +402,9 @@ void Game::update(){
             this->player->getHealth(), 
             this->player->getMaxHealth(), 
             this->player->getPoints(),
+            this->player->getHealthPotions(),
+            this->player->getSpeedPotions(),
+            this->player->getAttackPotions(),
             1 // TODO
         );
     }
