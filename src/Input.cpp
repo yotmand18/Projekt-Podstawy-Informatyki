@@ -9,6 +9,9 @@ Input::Input(){
     this->jump = sf::Keyboard::Key::W;
     this->attack = sf::Keyboard::Key::J;
     this->run = sf::Keyboard::Key::LShift;
+    this->HealthPotion = sf::Keyboard::Key::Num1;
+    this->SpeedPotion = sf::Keyboard::Key::Num2;
+    this->AttackPotion = sf::Keyboard::Key::Num3;
 
 }
 Input::~Input(){
@@ -29,6 +32,18 @@ bool Input::isJump() const {
 bool Input::isAttack() const {
     return sf::Keyboard::isKeyPressed(this->attack);
 }
-bool Input::isRunning() const{
+bool Input::isRunning() const {
     return sf::Keyboard::isKeyPressed(this->run);
+}
+
+bool Input::isHealthPotion() const{
+    return sf::Keyboard::isKeyPressed(this->HealthPotion);
+}
+
+bool Input::isSpeedPotion() const{
+    return sf::Keyboard::isKeyPressed(this->SpeedPotion);
+}
+
+bool Input::isAttackPotion() const{
+    return sf::Keyboard::isKeyPressed(this->AttackPotion);
 }

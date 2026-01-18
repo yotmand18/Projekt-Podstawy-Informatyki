@@ -65,6 +65,16 @@ void UI::initHUD(){
     AttackPotions.setCharacterSize(this->characterHUD);
     AttackPotions.setFillColor(this->colorAttackPotions);
     AttackPotions.setPosition(5.f, 55.f);
+
+    timeSpeedPotion.setFont(this->font);
+    timeSpeedPotion.setCharacterSize(this->characterHUD);
+    timeSpeedPotion.setFillColor(this->colorSpeedPotions);
+    timeSpeedPotion.setPosition(70.f, 30.f);
+         
+    timeAttackPotion.setFont(this->font);
+    timeAttackPotion.setCharacterSize(this->characterHUD);
+    timeAttackPotion.setFillColor(this->colorAttackPotions);
+    timeAttackPotion.setPosition(70.f, 55.f);
 }
 
 void UI::initPauseMenu(){
@@ -226,13 +236,17 @@ void UI::handleGameOverMenuInput(const sf::Event& ev){
 
 // Update
 
-void UI::updateHUD(int health, int maxHealth, int score, int level, int Health_Potions, int Speed_Potions, int Attack_Potions){
+void UI::updateHUD(int health, int maxHealth, int score, int level, int Health_Potions, int Speed_Potions, int Attack_Potions, int timeSpeedPotion, int timeAttackPotion){
     this->healthText.setString("Health: " + std::to_string(health) + "/" + std::to_string(maxHealth));
     this->scoreText.setString("Score: " + std::to_string(score));
     this->levelText.setString("Level: " + std::to_string(level));
     this->HealthPotions.setString(std::to_string(Health_Potions));
     this->SpeedPotions.setString(std::to_string(Speed_Potions));
     this->AttackPotions.setString(std::to_string(Attack_Potions));
+    if (timeSpeedPotion > 0)this->timeSpeedPotion.setString(std::to_string(15 - ((clock() - timeSpeedPotion) / CLOCKS_PER_SEC)));
+    else this->timeSpeedPotion.setString("");
+    if (timeAttackPotion > 0)this->timeAttackPotion.setString(std::to_string(15 - ((clock() - timeAttackPotion) / CLOCKS_PER_SEC)));
+    else this->timeAttackPotion.setString("");
 }
 
 void UI::update(){
@@ -255,6 +269,8 @@ void UI::renderHUD(sf::RenderTarget& target){
     target.draw(this->HealthPotions);
     target.draw(this->SpeedPotions);
     target.draw(this->AttackPotions);
+    target.draw(this->timeSpeedPotion);
+    target.draw(this->timeAttackPotion);
 }
 
 void UI::renderPauseMenu(sf::RenderTarget& target){

@@ -50,8 +50,10 @@ class UI{
         sf::Text HealthPotions;
         sf::Sprite HealthPotionsIcon;
         sf::Text SpeedPotions;
+        sf::Text timeSpeedPotion;
         sf::Sprite SpeedPotionsIcon;
         sf::Text AttackPotions;
+        sf::Text timeAttackPotion;
         sf::Sprite AttackPotionsIcon;
 
         // Pause Manu
@@ -98,7 +100,7 @@ class UI{
 
         // Update
 
-        void updateHUD(int health, int maxHealth, int score, int level, int Health_Potions, int Speed_Potions, int Attack_Potions);
+        void updateHUD(int health, int maxHealth, int score, int level, int Health_Potions, int Speed_Potions, int Attack_Potions, int timeSpeed, int timeAttack);
         void update();
 
         // Render

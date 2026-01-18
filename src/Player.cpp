@@ -11,6 +11,7 @@ void Player::initAnimations(){
 
 void Player::initStats(){
     this->health = 50;
+    this->attack = 5;
     this->maxHealth = 100;
     this->points = 0;
     this->damageCooldown = 1.f;
@@ -18,9 +19,13 @@ void Player::initStats(){
     this->gainedHealth = false;
     this->hasDealtDamage = false;
     this->facingRight = true;
+
     this->HealthPotions = 1;
     this->SpeedPotions= 1;
     this->AttackPotions = 1;
+    this->timeSpeedPotion = 0;
+    this->timeAttackPotion = 0;
+
 }
 
 // Constructors / Destructors
@@ -105,6 +110,13 @@ void Player::gainHealth(int amount){
     this->gainedHealth = true;
     this->sprite.setColor(sf::Color::Green);
 }
+
+void Player::modHealthPotion(int amount) { this->HealthPotions += amount; }
+void Player::modAttackPotion(int amount) { this->AttackPotions += amount; }
+void Player::modSpeedPotion(int amount) { this->SpeedPotions += amount; }
+
+
+
 
 // Functions
 bool Player::isInAttackHitFrame() const{
@@ -274,6 +286,9 @@ void Player::update(){
         this->sprite.setColor(sf::Color::White);
         this->gainedHealth = false;
     }
+    if ((clock() - this->timeAttackPotion) / CLOCKS_PER_SEC > 15) { timeAttackPotion = 0; attack = 5; }
+    else attack = 10;
+    if ((clock() - this->timeSpeedPotion) / CLOCKS_PER_SEC > 15)timeSpeedPotion = 0;
 }
 
 void Player::render(sf::RenderTarget& target){

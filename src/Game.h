@@ -5,6 +5,7 @@
 #include "Level.h"
 #include "UI.h"
 #include "PathUtils.h"
+#include "Potions.h"
 
 class Game{
     private:
@@ -28,6 +29,7 @@ class Game{
         Player* player;
         Input* input;
         Level* level;
+        Potions* potions;
         
         // Initialization
 
@@ -60,7 +62,10 @@ class Game{
         void updateCollision();
         void updateView();
         void updateCombat();
-        
+        void HealthPotion();
+        void SpeedPotion();
+        void AttackPotion();
+
         void update();
 
         void renderPlayer();

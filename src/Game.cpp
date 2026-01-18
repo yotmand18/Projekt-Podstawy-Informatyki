@@ -86,14 +86,45 @@ void Game::updateInput(){
     
     float moveX = 0.f;
     
-    if (this->input->isMoveLeft()) moveX -= moveSpeed;
-    if (this->input->isMoveRight()) moveX += moveSpeed;
+    if (this->input->isMoveLeft()) moveX -= moveSpeed+(this->player->timeSpeedPotion>0)*1;
+    if (this->input->isMoveRight()) moveX += moveSpeed + (this->player->timeSpeedPotion > 0) * 3;
     
     this->player->move(moveX, 0.f);
 
     // Only allow attack if not already attacking
     if(this->input->isAttack() && !this->player->isAttacking())
         this->player->setAnimState(ATTACKING);
+    if (this->input->isHealthPotion() && !this->player->isAttacking()) {
+        if (this->player->getHealthPotions() > 0) {
+            this->player->gainHealth(50);
+            this->player->modHealthPotion(-1);
+            //placeholder: animation
+        }
+        else {
+            //placeholder: alternate animation?
+        }
+    }
+    if (this->input->isSpeedPotion() && !this->player->isAttacking()) {
+        if (this->player->getSpeedPotions() > 0) {
+            this->player->timeSpeedPotion = clock();
+            this->player->modSpeedPotion(-1);
+            //placeholder: animation
+        }
+        else {
+            //placeholder: alternate animation?
+        }
+    }
+    if (this->input->isAttackPotion() && !this->player->isAttacking()) {
+        if (this->player->getAttackPotions() > 0) {
+            this->player->timeAttackPotion = clock();
+            this->player->modAttackPotion(-1);
+            //placeholder: animation
+        }
+        else {
+            //placeholder: alternate animation?
+        }
+    }
+    
 }
 
 void Game::updatePlayer(){
@@ -290,7 +321,7 @@ void Game::updateCombat() {
         // Only deal damage during the hit frames AND if haven't hit yet
         if(isAttacking && isHitFrame && !this->player->hasAttackHit() && 
            attackBounds.intersects(enemyBounds)) {
-            enemy->takeDamage(2);
+            enemy->takeDamage(this->player->getAttack());
             this->player->setAttackHit();
             std::cout << "Hit enemy! Enemy health: " << enemy->getHealth() << "\n";
         }
@@ -300,6 +331,9 @@ void Game::updateCombat() {
         }
     }
 }
+
+
+
 
 void Game::update(){
     while(this->window.pollEvent(this->ev)){
@@ -397,15 +431,22 @@ void Game::update(){
         if(!this->player->isAlive())
             this->ui->setState(GameState::GAMEOVER);
         
+
         // Update HUD
         this->ui->updateHUD(
             this->player->getHealth(), 
             this->player->getMaxHealth(), 
             this->player->getPoints(),
+            1,
+
             this->player->getHealthPotions(),
             this->player->getSpeedPotions(),
             this->player->getAttackPotions(),
-            1 // TODO
+            this->player->timeSpeedPotion,
+            this->player->timeAttackPotion
+            
+            
+            // TODO
         );
     }
 }

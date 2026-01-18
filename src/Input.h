@@ -10,6 +10,9 @@ class Input{
         sf::Keyboard::Key jump;
         sf::Keyboard::Key attack;
         sf::Keyboard::Key run;
+        sf::Keyboard::Key HealthPotion;
+        sf::Keyboard::Key SpeedPotion;
+        sf::Keyboard::Key AttackPotion;
 
 
     public:
@@ -24,6 +27,9 @@ class Input{
         bool isJump() const;
         bool isAttack() const;
         bool isRunning() const;
+        bool isHealthPotion() const;
+        bool isSpeedPotion() const;
+        bool isAttackPotion() const;
 
         // Functions
 
