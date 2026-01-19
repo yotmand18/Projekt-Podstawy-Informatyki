@@ -239,7 +239,7 @@ void UI::handleGameOverMenuInput(const sf::Event& ev){
 void UI::updateHUD(int health, int maxHealth, int score, int level, int Health_Potions, int Speed_Potions, int Attack_Potions, int timeSpeedPotion, int timeAttackPotion){
     this->healthText.setString("Health: " + std::to_string(health) + "/" + std::to_string(maxHealth));
     this->scoreText.setString("Score: " + std::to_string(score));
-    this->levelText.setString("Level: " + std::to_string(level));
+    this->levelText.setString("Level: " + std::to_string(level));   
     this->HealthPotions.setString(std::to_string(Health_Potions));
     this->SpeedPotions.setString(std::to_string(Speed_Potions));
     this->AttackPotions.setString(std::to_string(Attack_Potions));

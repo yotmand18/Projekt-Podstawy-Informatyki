@@ -9,6 +9,7 @@ void Enemy::initStats(){
             this->enemyBoundaries = {0, 0, 32, 32};
             this->isFlying = false;
             this->isAgressive = false;
+            this->XP = 10;
             break;
         case NEKKER:
             this->health = 5;
@@ -18,6 +19,7 @@ void Enemy::initStats(){
             this->isFlying = false;
             this->isAgressive = true;
             this->agroRange = 300.f;
+            this->XP = 5;
             break;
         case GHOUL:
             this->health = 15;
@@ -27,6 +29,7 @@ void Enemy::initStats(){
             this->isFlying = false;
             this->isAgressive = true;
             this->agroRange = 500.f;
+            this->XP = 20;
             break;
         case WRAITH:
             this->health = 30;
@@ -35,6 +38,7 @@ void Enemy::initStats(){
             this->enemyBoundaries = {0, 0, 16, 32};
             this->isFlying = true;
             this->isAgressive = false;
+            this->XP = 40;
             break;
         case GRIFFIN:
             this->health = 60;
@@ -97,8 +101,12 @@ int Enemy::getDamage() const{
     return this->damage;
 }
 
-int Enemy::getHealth() const{
+int Enemy::getHealth() const {
     return this->health;
+}
+
+int Enemy::getXP() const {
+    return this->XP;
 }
 
 bool Enemy::isAlive() const{

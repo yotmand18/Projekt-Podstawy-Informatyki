@@ -10,10 +10,13 @@ void Player::initAnimations(){
 }
 
 void Player::initStats(){
-    this->health = 50;
-    this->attack = 5;
-    this->maxHealth = 100;
+    this->level = 1;
+    this->health = 20*level;
+    this->attack = 2*level;
+    this->maxHealth = 20*level;
     this->points = 0;
+
+    this->levelUpPoints = 20;
     this->damageCooldown = 1.f;
     this->lostHealth = false;
     this->gainedHealth = false;
@@ -25,6 +28,7 @@ void Player::initStats(){
     this->AttackPotions = 1;
     this->timeSpeedPotion = 0;
     this->timeAttackPotion = 0;
+    this->timeHealthPotion = 0;
 
 }
 
@@ -111,12 +115,22 @@ void Player::gainHealth(int amount){
     this->sprite.setColor(sf::Color::Green);
 }
 
+
 void Player::modHealthPotion(int amount) { this->HealthPotions += amount; }
 void Player::modAttackPotion(int amount) { this->AttackPotions += amount; }
 void Player::modSpeedPotion(int amount) { this->SpeedPotions += amount; }
 
 
 
+
+inline void Player::LevelUp() {
+    this->level++;
+    this->attack = 2 * this->getLevel();
+    this->health = 20 * this->getLevel(); //Heal on levelup?
+    this->maxHealth = 20 * this->getLevel();
+    this->modHealthPotion(1); this->modSpeedPotion(1); this->modAttackPotion(1);
+
+}
 
 // Functions
 bool Player::isInAttackHitFrame() const{
@@ -286,9 +300,10 @@ void Player::update(){
         this->sprite.setColor(sf::Color::White);
         this->gainedHealth = false;
     }
-    if ((clock() - this->timeAttackPotion) / CLOCKS_PER_SEC > 15) { timeAttackPotion = 0; attack = 5; }
-    else attack = 10;
-    if ((clock() - this->timeSpeedPotion) / CLOCKS_PER_SEC > 15)timeSpeedPotion = 0;
+    if ((clock() - this->timeAttackPotion) / CLOCKS_PER_SEC > 15) { this->timeAttackPotion = 0;}
+    if ((clock() - this->timeSpeedPotion) / CLOCKS_PER_SEC > 15) { this->timeSpeedPotion = 0; }
+    if ((clock() - this->timeHealthPotion) / CLOCKS_PER_SEC > 0.5) { this->timeHealthPotion = 0; }
+    if (this->getPoints() >= this->levelUpPoints) { this->points -= this->levelUpPoints; this->LevelUp(); }
 }
 
 void Player::render(sf::RenderTarget& target){

@@ -3,7 +3,6 @@
 #include "Physics.h"
 
 enum PLAYER_ANIMATION_STATES{ IDLE = 0, MOVING_LEFT, MOVING_RIGHT, RUNNING_RIGHT, RUNNING_LEFT, ATTACKING };
-
 class Player{
     private:
         // Core
@@ -20,7 +19,10 @@ class Player{
         int health;
         int maxHealth;
         int points;
+        int level;
+        int levelMax = 5;
         int attack;
+        int levelUpPoints;
 
         int HealthPotions;
         int SpeedPotions;
@@ -61,8 +63,14 @@ class Player{
         inline bool isAttacking() const { return animState == ATTACKING; }
         inline bool hasAttackHit() const { return hasDealtDamage; }
 
+        inline int getLevel() const { return level; }
+        inline int getLevelMax() const { return levelMax; }
         inline int getHealth() const { return health; }
-        inline int getAttack() const { return attack; }
+        inline int getAttack() const {
+            if (timeAttackPotion > 0) return 2 * attack;
+            else return attack;
+            
+        }
         inline int getMaxHealth() const { return maxHealth; };
         inline int getPoints() const { return points; };
         inline int getHealthPotions() const { return HealthPotions; };
@@ -70,8 +78,6 @@ class Player{
         inline int getAttackPotions() const { return AttackPotions; };
         bool isAlive() const { return (health > 0); };
 
-        //bool isSpeedPotion{ return () };
-        //bool isSpeedPotion{ return () };
         
         inline bool getCanJump() const { return physics->getCanJump(); }
 
@@ -85,12 +91,13 @@ class Player{
         void modHealthPotion(int amount);
         void modSpeedPotion(int amount);
         void modAttackPotion(int amount);
-        
+
         inline void addPoints(int amount) { points += amount; }
         inline void setAttackHit() { hasDealtDamage = true; }
         inline void setCanJump(bool value) { physics->setCanJump(value); }
         inline void resetVelocityX() { physics->resetVelocityX(); }
         inline void resetVelocityY() { physics->resetVelocityY(); }
+        inline void LevelUp();
 
         // Functions
         bool isInAttackHitFrame() const;
@@ -104,4 +111,5 @@ class Player{
 
         clock_t timeSpeedPotion;
         clock_t timeAttackPotion;
+        clock_t timeHealthPotion;
 };
