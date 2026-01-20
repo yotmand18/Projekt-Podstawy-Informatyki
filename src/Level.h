@@ -2,37 +2,33 @@
 
 #include "Platform.h"
 #include "Enemy.h"
+#include <vector>
+#include <string>
+#include <map>
 
-class Level{
-    private:
-        // Core
+class Level {
+private:
 
-        std::vector<Platform*> platforms;
-        std::vector<Enemy*> enemies;
-        std::map<std::string, sf::Texture*> textures;
+    std::vector<Platform*> platforms;
+    std::vector<Enemy*> enemies;
+    std::map<std::string, sf::Texture*> textures;
 
-        std::string assetRoot;
+    std::string assetRoot;
 
-        void LoadTextures();
+    void LoadTextures();
 
-    public:
-        // Constructors / Destructors
-        explicit Level(const std::string& assetRoot);
+public:
 
-        Level();
-        virtual ~Level();
+    explicit Level(const std::string& assetRoot);
+    virtual ~Level();
 
-        // Accessors
-        
-        const std::vector<Platform*>& getPlatforms() const;
-        const std::vector<Enemy*>& getEnemies() const;
+    const std::vector<Platform*>& getPlatforms() const;
+    const std::vector<Enemy*>& getEnemies() const;
 
-        // Functions
+    bool loadFromFile(const std::string& filename);
 
-        bool loadFromFile(const std::string& filename);
+    void generateRandomLevel(float length, int difficulty);
 
-        void update(const sf::Vector2f& playerPos, const sf::View& view);
-
-        void render(sf::RenderTarget& target);
-        
+    void update(const sf::Vector2f& playerPos, const sf::View& view);
+    void render(sf::RenderTarget& target);
 };
