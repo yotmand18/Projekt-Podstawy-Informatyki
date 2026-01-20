@@ -102,9 +102,11 @@ void Game::updateInput(){
     // Only allow attack if not already attacking
     if(this->input->isAction("ATTACK") && !this->player->isAttacking())
         this->player->setAnimState(ATTACKING);
-    if (this->input->isAction("HEALTH_POTION") && !this->player->isAttacking()) {
+    if (this->input->isAction("HEALTH_POTION") && !this->player->isAttacking()&&this->player->timeHealthPotion==0) {
         if (this->player->getHealthPotions() > 0) {
-            this->player->gainHealth(50);
+
+            this->player->timeHealthPotion = clock();
+            this->player->gainHealth(this->player->getMaxHealth()/2);
             this->player->modHealthPotion(-1);
             //placeholder: animation
         }
@@ -112,7 +114,7 @@ void Game::updateInput(){
             //placeholder: alternate animation?
         }
     }
-    if (this->input->isAction("SPEED_POTION") && !this->player->isAttacking()) {
+    if (this->input->isAction("SPEED_POTION") && !this->player->isAttacking() && this->player->timeSpeedPotion == 0) {
         if (this->player->getSpeedPotions() > 0) {
             this->player->timeSpeedPotion = clock();
             this->player->modSpeedPotion(-1);
@@ -122,7 +124,7 @@ void Game::updateInput(){
             //placeholder: alternate animation?
         }
     }
-    if (this->input->isAction("ATTACK_POTION") && !this->player->isAttacking()) {
+    if (this->input->isAction("ATTACK_POTION") && !this->player->isAttacking() && this->player->timeAttackPotion == 0) {
         if (this->player->getAttackPotions() > 0) {
             this->player->timeAttackPotion = clock();
             this->player->modAttackPotion(-1);
@@ -286,6 +288,7 @@ void Game::updateCombat() {
             enemy->takeDamage(this->player->getAttack());
             this->player->setAttackHit();
             std::cout << "Hit enemy! Enemy health: " << enemy->getHealth() << "\n";
+            if (enemy->getHealth() == 0)player->addPoints(enemy->getXP());
         }
         
         if(playerBounds.intersects(enemyBounds)) {
@@ -426,8 +429,7 @@ void Game::update(){
             this->player->getHealth(), 
             this->player->getMaxHealth(), 
             this->player->getPoints(),
-            1,
-
+            this->player->getLevel(),
             this->player->getHealthPotions(),
             this->player->getSpeedPotions(),
             this->player->getAttackPotions(),

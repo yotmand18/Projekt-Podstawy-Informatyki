@@ -63,9 +63,6 @@ class Game{
         void updateCollision();
         void updateView();
         void updateCombat();
-        void HealthPotion();
-        void SpeedPotion();
-        void AttackPotion();
 
         void update();
 

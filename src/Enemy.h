@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Physics.h"
-
 enum ENEMY_TYPE {
     DROWNER = 0,
     NEKKER,
@@ -23,6 +22,7 @@ class Enemy{
         ENEMY_TYPE enemyType;
         int health;
         int damage;
+        int XP;
         float moveSpeed;
         bool isFlying;
         bool movingRight;
@@ -51,6 +51,7 @@ class Enemy{
         int getDamage() const;
         bool isAlive() const;
         int getHealth() const;
+        int getXP() const;
         bool canChase() const;
 
         sf::Vector2f getVelocity() const;
