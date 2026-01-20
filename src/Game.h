@@ -5,6 +5,7 @@
 #include "Level.h"
 #include "UI.h"
 #include "Settings.h"
+#include "PathUtils.h"
 
 class Game{
     private:
@@ -19,6 +20,9 @@ class Game{
         sf::Sprite backgroundSprite;
         // sf::Font font;
         // sf::Text gameOverText;
+        GameState previousState;
+
+        std::string assetRoot;
 
         // Class
 
@@ -59,7 +63,10 @@ class Game{
         void updateCollision();
         void updateView();
         void updateCombat();
-        
+        void HealthPotion();
+        void SpeedPotion();
+        void AttackPotion();
+
         void update();
 
         void renderPlayer();

@@ -23,6 +23,9 @@ class UI{
 
         Settings* settings;
 
+        std::string assetRoot;
+
+
         // Defaults
 
         unsigned characterTitle = 100;
@@ -35,7 +38,10 @@ class UI{
         sf::Color colorTitle = sf::Color(180, 180, 180);       // Silver
         sf::Color colorBackground = sf::Color(20, 20, 30);     // Dark blue-ish
         sf::Color colorHealth = sf::Color(200, 50, 50);        // Dark red
-        sf::Color colorScore = sf::Color(255, 215, 0);         // Gold
+        sf::Color colorScore = sf::Color(255, 215, 0);        // Dark red
+        sf::Color colorHpPotions= sf::Color(244, 111, 34);        // orange
+        sf::Color colorAttackPotions = sf::Color(23, 212, 215);        // Cyan
+        sf::Color colorSpeedPotions = sf::Color(148, 48, 187);         // Purple
 
 
         // Main Menu
@@ -49,15 +55,29 @@ class UI{
 
         sf::Text settingsTitle;
         std::vector<sf::Text> settingsOptions;
-        int settingsSelectedOptions;
+        int settingsSelectedOption;
         void initSettingsMenu();
+        int settingsOffset = 0;
+        const int maxVisibleOptions = 5;
+        bool isRebinding = false;
 
         // HUD
 
         sf::Text healthText;
         sf::Text scoreText;
         sf::Text levelText;
-        void initHUD();
+
+        void initHUD();        
+        
+        sf::Text HealthPotions;
+        sf::Sprite HealthPotionsIcon;
+        sf::Text SpeedPotions;
+        sf::Text timeSpeedPotion;
+        sf::Sprite SpeedPotionsIcon;
+        sf::Text AttackPotions;
+        sf::Text timeAttackPotion;
+        sf::Sprite AttackPotionsIcon;
+
 
         // Pause Manu
         sf::Text pausedTitle;
@@ -81,15 +101,20 @@ class UI{
 
     public:
         // Constructors / Destructors
-
-        UI();
+        explicit UI(const std::string& assetRoot);
         virtual ~UI();
 
         // Accessors
         inline GameState getGameState() const { return this->currentState; };
         inline int getMenuSelection() const { return this->menuSelectedOption; };
+        inline int getSettingsSelection() const { return this->settingsSelectedOption; };
         inline int getPauseSelection() const { return this->pauseSelectedOption; };
         inline int getGameOverSelection() const { return this->gameOverSelectedOption; };
+
+        // Settings
+        inline bool getIsRebinding() const { return isRebinding; };
+        inline void setIsRebinding(bool value) { isRebinding = value; };
+        inline std::vector<sf::Text>& getSettingsOptions() { return this->settingsOptions; };
 
         // Modifiers
         inline void setState(GameState state) { this->currentState = state; };
@@ -106,13 +131,15 @@ class UI{
         void handlePauseMenuInput(const sf::Event& ev);
         void handleGameOverMenuInput(const sf::Event& ev);
 
+        
         // Update
 
-        void updateHUD(int health, int maxHealth, int score, int level);
+        void updateHUD(int health, int maxHealth, int score, int level, int Health_Potions, int Speed_Potions, int Attack_Potions, int timeSpeed, int timeAttack);
         void update();
 
         // Render
         void renderMainMenu(sf::RenderTarget& target);
+        void renderSettingsMenu(sf::RenderTarget& target);
         void renderHUD(sf::RenderTarget& target);
         void renderPauseMenu(sf::RenderTarget& target);
         void renderGameOverMenu(sf::RenderTarget& target);

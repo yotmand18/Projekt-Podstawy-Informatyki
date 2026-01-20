@@ -3,9 +3,12 @@
 #include <sstream>
 
 // Constructors / Destructors
-Level::Level(){
+Level::Level(const std::string& root)
+    : assetRoot(root)
+{
     this->LoadTextures();
 }
+
 
 Level::~Level(){
     for (auto* platform : platforms) {
@@ -25,7 +28,7 @@ void Level::LoadTextures(){
     std::vector<std::string> platformTextures = {"rock1", "rock2"};
     for(const auto& name : platformTextures) {
         sf::Texture* tex = new sf::Texture();
-        if(tex->loadFromFile("./textures/platforms/" + name + ".png")){
+        if(tex->loadFromFile(assetRoot + "/textures/platforms/" + name + ".png")){
             tex->setSmooth(false);
             textures[name] = tex;
         } else {
@@ -35,10 +38,10 @@ void Level::LoadTextures(){
     }
     
     // Enemy textures - only load what you have
-    std::vector<std::string> enemyTextures = {"drowner", "ghoul"};
+    std::vector<std::string> enemyTextures = {"drowner", "ghoul", "wraith", "griffin"};
     for(const auto& name : enemyTextures) {
         sf::Texture* tex = new sf::Texture();
-        if(tex->loadFromFile("./textures/enemies/" + name + ".png")){
+        if(tex->loadFromFile(assetRoot + "/textures/enemies/" + name + ".png")){
             tex->setSmooth(false);  // ADD THIS - already there, but make sure!
             textures[name] = tex;
         } else {

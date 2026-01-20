@@ -1,4 +1,3 @@
-resolution 1280 720
 difficulty normal
 
 # keybinds
@@ -8,3 +7,6 @@ bind JUMP 22
 bind ATTACK 9
 bind RUN 38
 bind MENU 36
+bind HEALTH_POTION 27
+bind SPEED_POTION 28
+bind ATTACK_POTION 29

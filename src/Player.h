@@ -20,12 +20,18 @@ class Player{
         int health;
         int maxHealth;
         int points;
+        int attack;
+
+        int HealthPotions;
+        int SpeedPotions;
+        int AttackPotions;
 
         // Player flags
         bool lostHealth;
         bool gainedHealth;
         bool hasDealtDamage;
         bool facingRight;
+
 
         // Animations
         short animState;
@@ -56,9 +62,16 @@ class Player{
         inline bool hasAttackHit() const { return hasDealtDamage; }
 
         inline int getHealth() const { return health; }
+        inline int getAttack() const { return attack; }
         inline int getMaxHealth() const { return maxHealth; };
-        inline int getPoints() const { return points; }
+        inline int getPoints() const { return points; };
+        inline int getHealthPotions() const { return HealthPotions; };
+        inline int getSpeedPotions() const { return SpeedPotions; };
+        inline int getAttackPotions() const { return AttackPotions; };
         bool isAlive() const { return (health > 0); };
+
+        //bool isSpeedPotion{ return () };
+        //bool isSpeedPotion{ return () };
         
         inline bool getCanJump() const { return physics->getCanJump(); }
 
@@ -67,6 +80,11 @@ class Player{
         void setAnimState(short state);
         void takeDamage(int amount);
         void gainHealth(int amount);
+       
+
+        void modHealthPotion(int amount);
+        void modSpeedPotion(int amount);
+        void modAttackPotion(int amount);
         
         inline void addPoints(int amount) { points += amount; }
         inline void setAttackHit() { hasDealtDamage = true; }
@@ -83,4 +101,7 @@ class Player{
         void updateAnimations();\
         void update();
         void render(sf::RenderTarget& target);
+
+        clock_t timeSpeedPotion;
+        clock_t timeAttackPotion;
 };

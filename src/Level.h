@@ -11,10 +11,13 @@ class Level{
         std::vector<Enemy*> enemies;
         std::map<std::string, sf::Texture*> textures;
 
+        std::string assetRoot;
+
         void LoadTextures();
 
     public:
         // Constructors / Destructors
+        explicit Level(const std::string& assetRoot);
 
         Level();
         virtual ~Level();

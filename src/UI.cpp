@@ -4,7 +4,7 @@
 // Initialization
 
 void UI::initFont(){
-    if(!this->font.loadFromFile("./fonts/thewitcher-font/thewitcher-font.ttf")){
+    if(!this->font.loadFromFile(assetRoot + "/fonts/thewitcher-font/thewitcher-font.ttf")){
         std::cout << "ERROR::UI::Failed to load font\n";
     }
 }
@@ -19,7 +19,7 @@ void UI::initMainMenu(){
     this->menuTitle.setPosition(350.f, 100.f);
 
     // Menu options
-    std::vector<std::string> options = { "New Game", "Continue", "Exit" };
+    std::vector<std::string> options = { "New Game", "Continue", "Settings", "Exit" };
     
     for(size_t i = 0; i < options.size(); i++){
         sf::Text text;
@@ -36,32 +36,40 @@ void UI::initMainMenu(){
     this->menuOptions[0].setFillColor(this->colorSelected);
 }
 
-void UI::initSettingsMenu(){
-    this->menuSelectedOption = 0;
+void UI::initSettingsMenu() {
+    this->settingsSelectedOption = 0;
+    this->settingsTitle.setFont(this->font);
+    this->settingsTitle.setString("SETTINGS");
+    this->settingsTitle.setCharacterSize(this->characterTitle);
+    this->settingsTitle.setFillColor(this->colorTitle);
+    this->settingsTitle.setPosition(350.f, 50.f);
 
-    this->menuTitle.setFont(this->font);
-    this->menuTitle.setString("SETTINGS");
-    this->menuTitle.setCharacterSize(this->characterTitle);
-    this->menuTitle.setFillColor(this->colorTitle);
-    this->menuTitle.setPosition(350.f, 100.f);
+    std::vector<std::string> options = { 
+        "BACK",  
+        "DIFFICULTY", 
+        "----------", // Separator
+        "MOVE_LEFT", 
+        "MOVE_RIGHT", 
+        "JUMP", 
+        "ATTACK", 
+        "RUN", 
+        "MENU", 
+        "HEALTH_POTION", 
+        "SPEED_POTION", 
+        "ATTACK_POTION" 
+    };
 
-    // Menu options
-    std::vector<std::string> options = { "Resolution", "Difficilty", "Move Left", "Move Right", "Jump", "Attack", "Run", "Menu" };
-    std::vector<std::string> currentSettings;
     
-    for(size_t i = 0; i < options.size(); i++){
+    this->settingsOptions.clear();
+    for(size_t i = 0; i < options.size(); i++) {
         sf::Text text;
         text.setFont(this->font);   
         text.setString(options[i]);
         text.setCharacterSize(this->characterSecondary);
         text.setFillColor(this->colorNormal);
-        text.setPosition(500.f, 300.f + i * 80.f);
-        
-        this->menuOptions.push_back(text);
+        this->settingsOptions.push_back(text);
     }
-    
-    // Highlight first option
-    this->menuOptions[0].setFillColor(this->colorSelected);
+    this->settingsOptions[0].setFillColor(this->colorSelected);
 }
 
 
@@ -76,10 +84,35 @@ void UI::initHUD(){
     scoreText.setFillColor(this->colorScore);
     scoreText.setPosition(1000.f, 25.f);
 
-    levelText.setFont(this->font);   
+    levelText.setFont(this->font);
     levelText.setCharacterSize(this->characterHUD);
     levelText.setFillColor(this->colorNormal);
     levelText.setPosition(1000.f, 50.f);
+
+    HealthPotions.setFont(this->font);
+    HealthPotions.setCharacterSize(this->characterHUD);
+    HealthPotions.setFillColor(this->colorHpPotions);
+    HealthPotions.setPosition(5.f, 5.f);
+
+    SpeedPotions.setFont(this->font);
+    SpeedPotions.setCharacterSize(this->characterHUD);
+    SpeedPotions.setFillColor(this->colorSpeedPotions);
+    SpeedPotions.setPosition(5.f, 30.f);
+
+    AttackPotions.setFont(this->font);
+    AttackPotions.setCharacterSize(this->characterHUD);
+    AttackPotions.setFillColor(this->colorAttackPotions);
+    AttackPotions.setPosition(5.f, 55.f);
+
+    timeSpeedPotion.setFont(this->font);
+    timeSpeedPotion.setCharacterSize(this->characterHUD);
+    timeSpeedPotion.setFillColor(this->colorSpeedPotions);
+    timeSpeedPotion.setPosition(70.f, 30.f);
+         
+    timeAttackPotion.setFont(this->font);
+    timeAttackPotion.setCharacterSize(this->characterHUD);
+    timeAttackPotion.setFillColor(this->colorAttackPotions);
+    timeAttackPotion.setPosition(70.f, 55.f);
 }
 
 void UI::initPauseMenu(){
@@ -93,7 +126,7 @@ void UI::initPauseMenu(){
     this->pausedTitle.setPosition(350.f, 100.f);
 
     // Menu options
-    std::vector<std::string> options = { "Continue", "Main Menu", "Exit" };
+    std::vector<std::string> options = { "Continue", "Main Menu", "Settings", "Exit" };
     
     for(size_t i = 0; i < options.size(); i++){
         sf::Text text;
@@ -115,7 +148,7 @@ void UI::initGameOverMenu(bool didWin){
 
     if(didWin){
         // Title - VICTORY
-        this->gameOverTitle.setString("GAME OVER");
+        this->gameOverTitle.setString("Victory");
     }else{
         // Title - GAME OVER
         this->gameOverTitle.setString("GAME OVER");
@@ -146,16 +179,17 @@ void UI::initGameOverMenu(bool didWin){
 }
 
 // Constructors / Destructors
-
-UI::UI(){
-    this->currentState = GameState::MAINMENU;
-
+UI::UI(const std::string& root)
+    : assetRoot(root), currentState(GameState::MAINMENU)
+{
     this->initFont();
     this->initMainMenu();
+    this->initSettingsMenu();
     this->initHUD();
     this->initPauseMenu();
     this->initGameOverMenu(this->currentState == GameState::VICTORY);
 }
+
 
 UI::~UI(){
 
@@ -165,25 +199,40 @@ UI::~UI(){
 // Functions
 
 void UI::setSettings(Settings* settings){
-
+    this->settings = settings;
 }
 
-void UI::navigateMenu(std::vector<sf::Text>& options, int& selected, const sf::Event& ev){
+void UI::navigateMenu(std::vector<sf::Text>& options, int& selected, const sf::Event& ev) {
     if (ev.type == sf::Event::KeyPressed) {
-        
-        options[selected].setFillColor(sf::Color::White);
+        int oldSelected = selected;
 
         if (ev.key.code == sf::Keyboard::Up) {
             selected--;
-            if (selected < 0) 
-                selected = options.size() - 1;
         } 
         else if (ev.key.code == sf::Keyboard::Down) {
             selected++;
-            if (selected >= (int)options.size()) 
-                selected = 0; // Pełne zawijanie
+        }
+        else {
+            return; // Inny klawisz - nie rób nic
         }
 
+        // Zawijanie indeksu
+        if (selected < 0) selected = options.size() - 1;
+        else if (selected >= (int)options.size()) selected = 0;
+
+        // Omijanie separatora (jeśli istnieje)
+        if (options[selected].getString() == "----------") {
+            // Jeśli idziemy w górę, skocz o jeszcze jeden w górę, w dół - w dół
+            if (ev.key.code == sf::Keyboard::Up) selected--;
+            else selected++;
+
+            // Ponowne zawijanie po skoku
+            if (selected < 0) selected = options.size() - 1;
+            else if (selected >= (int)options.size()) selected = 0;
+        }
+
+        // Aktualizacja kolorów
+        options[oldSelected].setFillColor(this->colorNormal);
         options[selected].setFillColor(this->colorSelected);
     }
 }
@@ -195,7 +244,7 @@ void UI::handleMainMenuInput(const sf::Event& ev){
 }
 
 void UI::handleSettingsMenuInput(const sf::Event& ev){
-    navigateMenu(this->settingsOptions, this->settingsSelectedOptions, ev);
+    navigateMenu(this->settingsOptions, this->settingsSelectedOption, ev);
 }
 
 void UI::handlePauseMenuInput(const sf::Event& ev){
@@ -208,10 +257,17 @@ void UI::handleGameOverMenuInput(const sf::Event& ev){
 
 // Update
 
-void UI::updateHUD(int health, int maxHealth, int score, int level){
+void UI::updateHUD(int health, int maxHealth, int score, int level, int Health_Potions, int Speed_Potions, int Attack_Potions, int timeSpeedPotion, int timeAttackPotion){
     this->healthText.setString("Health: " + std::to_string(health) + "/" + std::to_string(maxHealth));
     this->scoreText.setString("Score: " + std::to_string(score));
-    this->levelText.setString("Level: " + std::to_string(level)); 
+    this->levelText.setString("Level: " + std::to_string(level));
+    this->HealthPotions.setString(std::to_string(Health_Potions));
+    this->SpeedPotions.setString(std::to_string(Speed_Potions));
+    this->AttackPotions.setString(std::to_string(Attack_Potions));
+    if (timeSpeedPotion > 0)this->timeSpeedPotion.setString(std::to_string(15 - ((clock() - timeSpeedPotion) / CLOCKS_PER_SEC)));
+    else this->timeSpeedPotion.setString("");
+    if (timeAttackPotion > 0)this->timeAttackPotion.setString(std::to_string(15 - ((clock() - timeAttackPotion) / CLOCKS_PER_SEC)));
+    else this->timeAttackPotion.setString("");
 }
 
 void UI::update(){
@@ -231,6 +287,11 @@ void UI::renderHUD(sf::RenderTarget& target){
     target.draw(this->healthText);
     target.draw(this->scoreText);
     target.draw(this->levelText);
+    target.draw(this->HealthPotions);
+    target.draw(this->SpeedPotions);
+    target.draw(this->AttackPotions);
+    target.draw(this->timeSpeedPotion);
+    target.draw(this->timeAttackPotion);
 }
 
 void UI::renderPauseMenu(sf::RenderTarget& target){
@@ -243,6 +304,50 @@ void UI::renderPauseMenu(sf::RenderTarget& target){
 
     for(auto& option : this->pauseOptions)
         target.draw(option);
+}
+
+void UI::renderSettingsMenu(sf::RenderTarget& target) {
+    if (!this->settings) return;
+
+    target.draw(this->settingsTitle);
+    const int maxVisible = 7; 
+
+    if (settingsSelectedOption >= settingsOffset + maxVisible)
+        settingsOffset = settingsSelectedOption - maxVisible + 1;
+    if (settingsSelectedOption < settingsOffset)
+        settingsOffset = settingsSelectedOption;
+
+    for (int i = 0; i < maxVisible; i++) {
+        int idx = i + settingsOffset;
+        if (idx >= (int)settingsOptions.size()) break;
+
+        this->settingsOptions[idx].setPosition(300.f, 180.f + i * 65.f);
+        target.draw(this->settingsOptions[idx]);
+
+        std::string name = this->settingsOptions[idx].getString();
+        
+        // nothing nect to BACK and separator
+        if (name == "BACK" || name == "----------") continue;
+
+        sf::Text val = this->settingsOptions[idx];
+        val.setPosition(850.f, 180.f + i * 65.f);
+        val.setFillColor(idx == settingsSelectedOption ? colorSelected : colorNormal);
+
+        if (name == "DIFFICULTY") {
+            Difficulty d = this->settings->getDifficulty();
+            val.setString(d == Difficulty::EASY ? "Easy" : d == Difficulty::NORMAL ? "Normal" : "Hard");
+        } 
+        else {
+            // keybind
+            if (isRebinding && idx == settingsSelectedOption) {
+                val.setString("???");
+                val.setFillColor(sf::Color::Red);
+            } else {
+                val.setString(Settings::keyToString(this->settings->getKeybind(name)));
+            }
+        }
+        target.draw(val);
+    }
 }
 
 void UI::renderGameOverMenu(sf::RenderTarget& target){
@@ -266,7 +371,9 @@ void UI::render(sf::RenderTarget& target){
         case GameState::PAUSED:
             this->renderPauseMenu(target);
             break;
-            
+        case GameState::SETTINGS:
+            this->renderSettingsMenu(target);
+            break;
         case GameState::GAMEOVER:
         case GameState::VICTORY:
             this->renderGameOverMenu(target);
