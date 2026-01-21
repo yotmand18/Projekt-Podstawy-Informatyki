@@ -30,6 +30,8 @@ class Settings{
         sf::Keyboard::Key getKeybind(const std::string& action) const;
         const std::map<std::string, sf::Keyboard::Key>& getKeybinds() const { return keybinds; }
 
+        float getDifficultyMultiplier() const;
+
         // Modifiers
 
         inline void setKeybind(const std::string& action, sf::Keyboard::Key key) { this->keybinds[action] = key; };

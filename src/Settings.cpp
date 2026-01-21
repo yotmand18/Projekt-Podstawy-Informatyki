@@ -20,6 +20,15 @@ sf::Keyboard::Key Settings::getKeybind(const std::string& action) const {
     return sf::Keyboard::Unknown;
 }
 
+float Settings::getDifficultyMultiplier() const {
+    switch (currentDifficulty) {
+        case Difficulty::EASY:   return 0.5f;
+        case Difficulty::NORMAL: return 1.0f;
+        case Difficulty::HARD:   return 1.5f;
+        default: return 1.0f;
+    }
+}
+
 // Functions
 
 void Settings::toggleResolution() {
@@ -48,6 +57,7 @@ bool Settings::loadFromFile(const std::string& assetRoot){
     std::ifstream file(assetRoot + "/settings/settings.txt");
     if(!file.is_open()){
         std::cout << "ERROR::SETTINGS::Could not open settings.txt\n";
+        std::cout << assetRoot + "/settings/settings.txt\n"; 
         return false;
     }
     

@@ -6,26 +6,16 @@ void Enemy::initStats(){
             this->health = 10;
             this->damage = 2;
             this->moveSpeed = 2.f;
-            this->enemyBoundaries = {0, 0, 32, 32};
+            this->enemyBoundaries = {0, 0, 45, 64};
             this->isFlying = false;
             this->isAgressive = false;
             this->XP = 10;
             break;
-        case NEKKER:
-            this->health = 5;
-            this->damage = 1;
-            this->moveSpeed = 4.f;
-            this->enemyBoundaries = {0, 0, 16, 16};
-            this->isFlying = false;
-            this->isAgressive = true;
-            this->agroRange = 300.f;
-            this->XP = 5;
-            break;
         case GHOUL:
             this->health = 15;
-            this->damage = 5;
+            this->damage = 3;
             this->moveSpeed = 3.f;
-            this->enemyBoundaries = {0, 0, 32, 32};
+            this->enemyBoundaries = {0, 0, 73, 67};
             this->isFlying = false;
             this->isAgressive = true;
             this->agroRange = 500.f;
@@ -35,19 +25,20 @@ void Enemy::initStats(){
             this->health = 30;
             this->damage = 4;
             this->moveSpeed = 1.f;
-            this->enemyBoundaries = {0, 0, 16, 32};
+            this->enemyBoundaries = {0, 0, 62, 64};
             this->isFlying = true;
             this->isAgressive = false;
             this->XP = 40;
             break;
         case GRIFFIN:
             this->health = 60;
-            this->damage = 8;
-            this->moveSpeed = 1.f;
-            this->enemyBoundaries = {0, 0, 48, 48};
+            this->damage = 5;
+            this->moveSpeed = 2.f;
+            this->enemyBoundaries = {0, 0, 114, 86};
             this->isFlying = true;
             this->isAgressive = true;
             this->agroRange = 600.f;
+            this->XP = 60;
             break;
         default:
             std::cout << "ERROR::ENEMY::Unknown type loaded";
@@ -71,19 +62,23 @@ void Enemy::initSprite(sf::Texture* texture){
     );
 }
 
-Enemy::Enemy(float x, float y, ENEMY_TYPE enemy_type, sf::Texture* texture, float patrol_left, float patrol_right){
+Enemy::Enemy(float x, float y, ENEMY_TYPE enemy_type, sf::Texture* texture,
+             float patrol_left, float patrol_right, float multiplier)
+{
     this->enemyType = enemy_type;
     this->patrolLeft = patrol_left;
     this->patrolRight = patrol_right;
-    
     this->initStats();
+
+    // Apply difficulty multiplier
+    this->health = static_cast<int>(this->health * multiplier);
+    this->damage = static_cast<int>(this->damage * multiplier);
+
     this->initSprite(texture);
-    
-    // Create physics - flying enemies don't use gravity
     this->physics = new Physics(sf::Vector2f(0.f, 0.f), &this->sprite, !this->isFlying);
-    
     this->sprite.setPosition(x, y);
 }
+
 
 Enemy::~Enemy(){
     delete this->physics;

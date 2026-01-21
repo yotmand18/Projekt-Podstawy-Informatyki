@@ -19,7 +19,7 @@ void UI::initMainMenu(){
     this->menuTitle.setPosition(350.f, 100.f);
 
     // Menu options
-    std::vector<std::string> options = { "New Game", "Continue", "Settings", "Exit" };
+    std::vector<std::string> options = { "Play", "Settings", "Exit" };
     
     for(size_t i = 0; i < options.size(); i++){
         sf::Text text;
@@ -143,16 +143,11 @@ void UI::initPauseMenu(){
     this->pauseOptions[0].setFillColor(this->colorSelected);
 }
 
-void UI::initGameOverMenu(bool didWin){
+void UI::initGameOverMenu(){
     this->gameOverSelectedOption = 0;
 
-    if(didWin){
-        // Title - VICTORY
-        this->gameOverTitle.setString("Victory");
-    }else{
-        // Title - GAME OVER
-        this->gameOverTitle.setString("GAME OVER");
-    }
+    // Title - GAME OVER
+    this->gameOverTitle.setString("GAME OVER");
 
     // The other values are shared
     this->gameOverTitle.setFont(this->font);
@@ -161,7 +156,7 @@ void UI::initGameOverMenu(bool didWin){
     this->gameOverTitle.setPosition(350.f, 100.f);
 
     // Menu options
-    std::vector<std::string> options = { "Main Menu", "Exit" };
+    std::vector<std::string> options = { "Exit" };
     
     for(size_t i = 0; i < options.size(); i++){
         sf::Text text;
@@ -187,7 +182,7 @@ UI::UI(const std::string& root)
     this->initSettingsMenu();
     this->initHUD();
     this->initPauseMenu();
-    this->initGameOverMenu(this->currentState == GameState::VICTORY);
+    this->initGameOverMenu();
 }
 
 
@@ -375,7 +370,6 @@ void UI::render(sf::RenderTarget& target){
             this->renderSettingsMenu(target);
             break;
         case GameState::GAMEOVER:
-        case GameState::VICTORY:
             this->renderGameOverMenu(target);
             break;
             

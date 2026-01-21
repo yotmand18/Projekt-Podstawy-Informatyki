@@ -18,7 +18,7 @@ class Player{
         // Player stats
         int health;
         int maxHealth;
-        int points;
+        long unsigned points;
         int level;
         int levelMax = 5;
         int attack;
@@ -33,6 +33,7 @@ class Player{
         bool gainedHealth;
         bool hasDealtDamage;
         bool facingRight;
+        bool onGroundLastFrame = false;
 
 
         // Animations
@@ -53,6 +54,9 @@ class Player{
         // Accessors
         bool getCanSwitchAnim();
         const sf::FloatRect getGlobalBounds() const;
+
+        bool wasOnGroundLastFrame() const { return onGroundLastFrame; }
+        void setOnGroundLastFrame(bool val) { onGroundLastFrame = val; }
 
         const sf::Vector2f getPosition() const { return sprite.getPosition(); };
         inline const sf::Vector2f getPrevPosition() const { return previousPosition; }

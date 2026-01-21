@@ -33,13 +33,15 @@ class Enemy{
         bool isAgressive;
         bool isChasing;
         float agroRange;
+        bool attackAnim;
+
         sf::Vector2f playerPos;
         
         void initSprite(sf::Texture* texture);
         void initStats();
 
     public:
-        Enemy(float x, float y, ENEMY_TYPE enemyType, sf::Texture* texture, float patrol_left, float patrol_right);
+        Enemy(float x, float y, ENEMY_TYPE enemy_type, sf::Texture* texture, float patrol_left, float patrol_right, float multiplier);
         virtual ~Enemy();
 
         // Accessors

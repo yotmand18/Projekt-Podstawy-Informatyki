@@ -1,43 +1,59 @@
 #include "Game.h"
-
 void Game::initWindow() {
-    this->window.create(sf::VideoMode(1280, 720), "Game", sf::Style::Close | sf::Style::Titlebar | sf::Style::Resize);
+    // Use settings resolution if present
+    sf::Vector2u res = this->settings.getResolution();
+    if (res.x == 0 || res.y == 0) {
+        res = {1280, 720}; // fallback
+    }
+
+    this->window.create(
+        sf::VideoMode(res.x, res.y),
+        "Game",
+        sf::Style::Close | sf::Style::Titlebar | sf::Style::Resize
+    );
     this->window.setFramerateLimit(60);
 
-
-    this->view.setSize(1280.f, 720.f);
-    this->view.setCenter(630.f, 360.f);
-
+    // Make camera size match resolution
+    this->view.setSize(static_cast<float>(res.x), static_cast<float>(res.y));
+    this->view.setCenter(static_cast<float>(res.x) / 2.f, static_cast<float>(res.y) / 2.f);
 }
 
 void Game::initUI() {
     this->ui = new UI(assetRoot);
+    this->ui->setSettings(&this->settings);
 }
 
 void Game::initTextures() {
-
-    if (!this->playerTextureSheet.loadFromFile(assetRoot + "textures/player/player_stylesheet.png"))
+    // Build paths relative to normalized assetRoot (assetRoot ends with '/')
+    if (!this->playerTextureSheet.loadFromFile(assetRoot + "textures/player/player_stylesheet.png")) {
         std::cout << "ERROR::GAME::Failed to load player texture\n";
-    else
+    } else {
         this->playerTextureSheet.setSmooth(false);
+    }
 
-
-    if (!this->backgroundTexture.loadFromFile(assetRoot + "textures/backgrounds/level1.png"))
+    if (!this->backgroundTexture.loadFromFile(assetRoot + "textures/backgrounds/background_2.png")) {
         std::cout << "ERROR::GAME::Failed to load background\n";
-    else {
+    } else {
         this->backgroundTexture.setSmooth(false);
         this->backgroundSprite.setTexture(this->backgroundTexture);
 
+        // Scale background to cover the window resolution
+        sf::Vector2u res = this->settings.getResolution();
+        if (res.x == 0 || res.y == 0) {
+            res = {1280, 720};
+        }
 
-        float scaleX = 1280.f / this->backgroundTexture.getSize().x;
-        float scaleY = 720.f / this->backgroundTexture.getSize().y;
+        float scaleX = static_cast<float>(res.x) / static_cast<float>(this->backgroundTexture.getSize().x);
+        float scaleY = static_cast<float>(res.y) / static_cast<float>(this->backgroundTexture.getSize().y);
         this->backgroundSprite.setScale(scaleX, scaleY);
     }
 }
 
 void Game::initInput() {
-    this->input = new Input();
+    // Input requires Settings pointer
+    this->input = new Input(&this->settings);
 }
+
 
 void Game::initLevel() {
     std::srand(static_cast<unsigned>(std::time(nullptr)));
@@ -46,21 +62,51 @@ void Game::initLevel() {
 
     this->level->generateRandomLevel(10000.f, 3);
 
+    this->level->setSettings(&this->settings);
+
     std::cout << "Level generated succesfully!\n";
 }
 
 void Game::initPlayer() {
     this->player = new Player(this->playerTextureSheet);
-    this->player->setPosition(0.f, 450.f);
+
+    // Place player on top of the starting platform
+    const auto& platforms = this->level->getPlatforms();
+    if (!platforms.empty()) {
+        sf::FloatRect startPlatBounds = platforms[0]->getGlobalBounds();
+        float playerHeight = 158.f; // frame height
+        this->player->setPosition(
+            startPlatBounds.left,               // X: left edge of platform
+            startPlatBounds.top - playerHeight  // Y: on top of platform
+        );
+    } else {
+        // fallback if no platforms
+        this->player->setPosition(0.f, this->level->getWorldFloor() - 158.f);
+    }
 }
 
 
-Game::Game()
-    : level(nullptr), ui(nullptr)
-{
-    
-    assetRoot = "";
 
+Game::Game()
+    : level(nullptr)
+    , ui(nullptr)
+    , previousState(GameState::MAINMENU)
+    , gameOver(false)
+{
+    // Determine executable directory (PathUtils::getExecutableDir assumed)
+    assetRoot = getExecutableDir();
+
+    // Normalize assetRoot to ensure trailing slash
+    if (!assetRoot.empty() && assetRoot.back() != '/' && assetRoot.back() != '\\') {
+        assetRoot.push_back('/');
+    }
+
+    // Load settings from assetRoot/settings.txt (falls back to defaults internally)
+    if (!this->settings.loadFromFile(assetRoot)) {
+        std::cout << "WARNING::GAME::Using default settings\n";
+    }
+
+    // Initialize subsystems (order matters: window may use settings)
     this->initWindow();
     this->initUI();
     this->initTextures();
@@ -77,54 +123,42 @@ Game::~Game() {
     delete this->ui;
 }
 
-
 void Game::updateInput() {
     float moveSpeed = 2.f;
 
- 
-    if (this->input->isRunning())
-        moveSpeed = 6.f; 
+    if (this->input->isAction("RUN"))
+        moveSpeed = 6.f;
 
     float moveX = 0.f;
 
-    if (this->input->isMoveLeft()) moveX -= moveSpeed + (this->player->timeSpeedPotion > 0) * 1;
-    if (this->input->isMoveRight()) moveX += moveSpeed + (this->player->timeSpeedPotion > 0) * 3;
+    if (this->input->isAction("MOVE_LEFT")) moveX -= moveSpeed + (this->player->timeSpeedPotion > 0) * 1;
+    if (this->input->isAction("MOVE_RIGHT")) moveX += moveSpeed + (this->player->timeSpeedPotion > 0) * 3;
 
     this->player->move(moveX, 0.f);
 
-    if (this->input->isAttack() && !this->player->isAttacking())
+    if (this->input->isAction("ATTACK") && !this->player->isAttacking())
         this->player->setAnimState(ATTACKING);
-    if (this->input->isHealthPotion() && !this->player->isAttacking() && this->player->timeHealthPotion == 0) {
-        if (this->player->getHealthPotions() > 0) {
 
+    // Potions (kept from colleague)
+    if (this->input->isAction("HEALTH_POTION") && !this->player->isAttacking() && this->player->timeHealthPotion == 0) {
+        if (this->player->getHealthPotions() > 0) {
             this->player->timeHealthPotion = clock();
             this->player->gainHealth(this->player->getMaxHealth() / 2);
             this->player->modHealthPotion(-1);
-
-        }
-        else {
-
         }
     }
-    if (this->input->isSpeedPotion() && !this->player->isAttacking() && this->player->timeSpeedPotion == 0) {
+    if (this->input->isAction("SPEED_POTION") && !this->player->isAttacking() && this->player->timeSpeedPotion == 0) {
         if (this->player->getSpeedPotions() > 0) {
             this->player->timeSpeedPotion = clock();
             this->player->modSpeedPotion(-1);
         }
-        else {
-
-        }
     }
-    if (this->input->isAttackPotion() && !this->player->isAttacking() && this->player->timeAttackPotion == 0) {
+    if (this->input->isAction("ATTACK_POTION") && !this->player->isAttacking() && this->player->timeAttackPotion == 0) {
         if (this->player->getAttackPotions() > 0) {
             this->player->timeAttackPotion = clock();
             this->player->modAttackPotion(-1);
         }
-        else {
-
-        }
     }
-
 }
 
 void Game::updatePlayer() {
@@ -132,165 +166,199 @@ void Game::updatePlayer() {
 }
 
 void Game::updateCollision() {
+    constexpr float EPS = 0.001f;
     bool playerOnGround = false;
 
+    // ---------- Player collision ----------
     {
         sf::FloatRect bounds = player->getGlobalBounds();
         sf::Vector2f prevPos = player->getPrevPosition();
 
         sf::FloatRect prevBounds = bounds;
         prevBounds.left = prevPos.x;
-        prevBounds.top = prevPos.y;
-
+        prevBounds.top  = prevPos.y;
 
         for (const auto* platform : level->getPlatforms()) {
-            sf::FloatRect plat = platform->getBounds();
+            if (!platform) continue;
+            sf::FloatRect plat = platform->getGlobalBounds();
 
-            if (!bounds.intersects(plat))
-                continue;
+            if (!bounds.intersects(plat)) continue;
 
-            float dxLeft = (bounds.left + bounds.width) - plat.left;
-            float dxRight = (plat.left + plat.width) - bounds.left;
-            float dyTop = (bounds.top + bounds.height) - plat.top;
-            float dyBottom = (plat.top + plat.height) - bounds.top;
+            float overlapLeft   = (bounds.left + bounds.width) - plat.left;
+            float overlapRight  = (plat.left + plat.width) - bounds.left;
+            float overlapTop    = (bounds.top + bounds.height) - plat.top;
+            float overlapBottom = (plat.top + plat.height) - bounds.top;
 
-            float penX = std::min(dxLeft, dxRight);
-            float penY = std::min(dyTop, dyBottom);
+            float penX = std::min(overlapLeft, overlapRight);
+            float penY = std::min(overlapTop, overlapBottom);
 
-            bool cameFromSide =
-                prevBounds.top + prevBounds.height > plat.top &&
-                prevBounds.top < plat.top + plat.height;
-
-            if (penX < penY && cameFromSide) {
-
-                if (prevPos.x + bounds.width <= plat.left) {
+            if (penX + EPS < penY) {
+                // Horizontal collision
+                if (prevPos.x + bounds.width <= plat.left + EPS) {
                     player->setPosition(plat.left - bounds.width, bounds.top);
-                }
-                else {
+                } else if (prevPos.x >= plat.left + plat.width - EPS) {
                     player->setPosition(plat.left + plat.width, bounds.top);
+                } else {
+                    if (overlapLeft < overlapRight)
+                        player->setPosition(bounds.left - overlapLeft, bounds.top);
+                    else
+                        player->setPosition(bounds.left + overlapRight, bounds.top);
                 }
                 player->resetVelocityX();
-            }
-            else {
-                if (prevPos.y + bounds.height <= plat.top) {
+            } else {
+                // Vertical collision
+                if (prevPos.y + bounds.height <= plat.top + EPS) {
+                    // landed on top
                     player->setPosition(bounds.left, plat.top - bounds.height);
+                    player->resetVelocityY();
                     playerOnGround = true;
-                }
-                else {
-                    player->setPosition(bounds.left, plat.top + plat.height);
-                }
-                player->resetVelocityY();
-            }
 
+                    bounds = player->getGlobalBounds();
+                    break; // landing is final
+                } else if (prevPos.y >= plat.top + plat.height - EPS) {
+                    // hit from below
+                    player->setPosition(bounds.left, plat.top + plat.height);
+                    player->resetVelocityY();
+                } else {
+                    if (overlapTop < overlapBottom)
+                        player->setPosition(bounds.left, bounds.top - overlapTop);
+                    else
+                        player->setPosition(bounds.left, bounds.top + overlapBottom);
+                    player->resetVelocityY();
+                }
+            }
             bounds = player->getGlobalBounds();
         }
     }
 
+    // ---------- Floor collision ----------
     {
         sf::FloatRect b = player->getGlobalBounds();
-        float bottom = this->view.getSize().y;
+        float floorY = this->level->getWorldFloor();
+        constexpr float floorEpsilon = 0.5f;
 
-        if (b.top + b.height >= bottom) {
-            player->setPosition(b.left, bottom - b.height);
+        if (b.top + b.height > floorY - floorEpsilon) {
+            player->setPosition(b.left, floorY - b.height);
             player->resetVelocityY();
             playerOnGround = true;
+
+            // SWAMP DAMAGE: only on newly landed frames
+            if (!player->wasOnGroundLastFrame()) {
+                // tweak damage amount as needed
+                player->takeDamage(1);
+            }
         }
     }
 
     player->setCanJump(playerOnGround);
+    player->setOnGroundLastFrame(playerOnGround);
 
+    // ---------- Enemy collision (unchanged) ----------
     for (auto* enemy : level->getEnemies()) {
-        bool hitWall = false;
-
-        if (!enemy->isAlive())
-            continue;
+        if (!enemy) continue;
+        if (!enemy->isAlive()) continue;
 
         bool enemyOnGround = false;
+        bool hitWall = false;
+
         sf::FloatRect bounds = enemy->getGlobalBounds();
         sf::Vector2f prevPos = enemy->getPrevPosition();
-
-        sf::FloatRect prevBounds;
+        sf::FloatRect prevBounds = bounds;
         prevBounds.left = prevPos.x;
-        prevBounds.top = prevPos.y;
-        prevBounds.width = bounds.width;
-        prevBounds.height = bounds.height;
+        prevBounds.top  = prevPos.y;
 
         for (const auto* platform : level->getPlatforms()) {
-            sf::FloatRect plat = platform->getBounds();
+            if (!platform) continue;
+            sf::FloatRect plat = platform->getGlobalBounds();
+            if (!bounds.intersects(plat)) continue;
 
-            if (!bounds.intersects(plat))
-                continue;
+            float overlapLeft   = (bounds.left + bounds.width) - plat.left;
+            float overlapRight  = (plat.left + plat.width) - bounds.left;
+            float overlapTop    = (bounds.top + bounds.height) - plat.top;
+            float overlapBottom = (plat.top + plat.height) - bounds.top;
 
-            float dxLeft = (bounds.left + bounds.width) - plat.left;
-            float dxRight = (plat.left + plat.width) - bounds.left;
-            float dyTop = (bounds.top + bounds.height) - plat.top;
-            float dyBottom = (plat.top + plat.height) - bounds.top;
+            float penX = std::min(overlapLeft, overlapRight);
+            float penY = std::min(overlapTop, overlapBottom);
 
-            float penX = std::min(dxLeft, dxRight);
-            float penY = std::min(dyTop, dyBottom);
-
-            bool cameFromSide =
-                prevBounds.top + prevBounds.height > plat.top &&
-                prevBounds.top < plat.top + plat.height;
-
-            if (penX < penY && cameFromSide) {
+            if (penX + EPS < penY) {
                 hitWall = true;
-
-                if (prevPos.x + bounds.width <= plat.left)
+                if (prevPos.x + bounds.width <= plat.left + EPS) {
                     enemy->setPosition(plat.left - bounds.width, bounds.top);
-                else
+                } else if (prevPos.x >= plat.left + plat.width - EPS) {
                     enemy->setPosition(plat.left + plat.width, bounds.top);
-
+                } else {
+                    if (overlapLeft < overlapRight)
+                        enemy->setPosition(bounds.left - overlapLeft, bounds.top);
+                    else
+                        enemy->setPosition(bounds.left + overlapRight, bounds.top);
+                }
                 enemy->resetVelocityX();
-            }
-            else {
-                if (prevPos.y + bounds.height <= plat.top) {
+            } else {
+                if (prevPos.y + bounds.height <= plat.top + EPS) {
                     enemy->setPosition(bounds.left, plat.top - bounds.height);
+                    enemy->resetVelocityY();
                     enemyOnGround = true;
-                }
-                else {
+                    bounds = enemy->getGlobalBounds();
+                    break;
+                } else if (prevPos.y >= plat.top + plat.height - EPS) {
                     enemy->setPosition(bounds.left, plat.top + plat.height);
+                    enemy->resetVelocityY();
+                } else {
+                    if (overlapTop < overlapBottom)
+                        enemy->setPosition(bounds.left, bounds.top - overlapTop);
+                    else
+                        enemy->setPosition(bounds.left, bounds.top + overlapBottom);
+                    enemy->resetVelocityY();
                 }
-                enemy->resetVelocityY();
             }
-
             bounds = enemy->getGlobalBounds();
         }
 
-        {
-            sf::FloatRect b = enemy->getGlobalBounds();
-            float bottom = this->view.getSize().y;
-
-            if (b.top + b.height >= bottom) {
-                enemy->setPosition(b.left, bottom - b.height);
-                enemy->resetVelocityY();
-                enemyOnGround = true;
-            }
+        sf::FloatRect eb = enemy->getGlobalBounds();
+        if (eb.top + eb.height > level->getWorldFloor()) {
+            enemy->setPosition(eb.left, level->getWorldFloor() - eb.height);
+            enemy->resetVelocityY();
+            enemyOnGround = true;
         }
 
-        if (hitWall && enemyOnGround) {
-            enemy->jump();
-        }
-
-
+        if (hitWall && enemyOnGround) enemy->jump();
         enemy->setCanJump(enemyOnGround);
     }
 }
 
 
+
+
 void Game::updateView() {
+    // Horizontal center follows player
+    float centerX = this->player->getPosition().x + this->player->getGlobalBounds().width / 2.f;
 
-    this->view.setCenter(
-        this->player->getPosition().x + this->player->getGlobalBounds().width / 2.f,
-        this->player->getPosition().y
-    );
+    // Make camera vertical such that the bottom of the view sits near the world floor.
+    // This ensures platforms (which are placed with y = worldFloor - height) are visible.
+    float floor = this->level->getWorldFloor();
 
-    if (this->view.getCenter().y > 360.f)
-        this->view.setCenter(this->view.getCenter().x, 360.f);
+    // How many pixels of "ground margin" to show at the bottom (tweak as desired)
+    const float groundMargin = 50.f;
 
-    if (this->view.getCenter().x < 640.f)
+    // Desired bottom coordinate of view (world coordinate)
+    float desiredViewBottom = floor - groundMargin;
+
+    // Compute center.y so that view bottom equals desiredViewBottom
+    float centerY = desiredViewBottom - (this->view.getSize().y * 0.5f);
+
+    // Prevent camera from moving above top of the level (optional)
+    float minCenterY = this->view.getSize().y * 0.5f;
+    if (centerY < minCenterY) centerY = minCenterY;
+
+    this->view.setCenter(centerX, centerY);
+
+    // Left boundary (keep existing behaviour)
+    if (this->view.getCenter().x < 640.f) {
         this->view.setCenter(640.f, this->view.getCenter().y);
+    }
 }
+
+
 void Game::updateCombat() {
     sf::FloatRect playerBounds = this->player->getGlobalBounds();
     sf::FloatRect attackBounds = this->player->getAttackBounds();
@@ -322,80 +390,76 @@ void Game::updateCombat() {
 
 void Game::update() {
     while (this->window.pollEvent(this->ev)) {
-        if (this->ev.type == sf::Event::Closed)
-            this->window.close();
-        else if (this->ev.type == sf::Event::Resized) {
-        }
+    if (this->ev.type == sf::Event::Closed)
+        this->window.close();
 
-        if (this->ui->getGameState() == GameState::MAINMENU) {
-            this->ui->handleMainMenuInput(this->ev);
+    // Handle UI input
+    GameState state = this->ui->getGameState();
 
-            if (this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Return) {
-                int selection = this->ui->getMenuSelection();
-                switch (selection) {
-                case 0:  
-                    this->ui->setState(GameState::PLAYING);
-                    break;
-                case 1:  
-                    this->ui->setState(GameState::PLAYING);
-                    break;
-                case 2:  
-                    break;
-                case 3:  
-                    this->window.close();
-                    break;
-                }
-            }
-            return;
-        }
-        else if (this->ui->getGameState() == GameState::PAUSED) {
-            this->ui->handlePauseMenuInput(this->ev);
+    if (state == GameState::MAINMENU) {
+        this->ui->handleMainMenuInput(this->ev);
 
-            if (this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Return) {
-                int selection = this->ui->getPauseSelection();
-                switch (selection) {
-                case 0:  
-                    this->ui->setState(GameState::PLAYING);
-                    break;
-                case 1:  
-                    this->ui->setState(GameState::MAINMENU);
-                    break;
-                case 2:
-                    break;
-                case 3:
-                    this->window.close();
-                    break;
-                }
-            }
-            return;
-        }
-        else if (this->ui->getGameState() == GameState::GAMEOVER || this->ui->getGameState() == GameState::VICTORY) {
-            this->ui->handleGameOverMenuInput(this->ev);
-
-            if (this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Return) {
-                int selection = this->ui->getGameOverSelection();
-                switch (selection) {
-                case 0: 
-                    this->ui->setState(GameState::MAINMENU);
-                    break;
-                case 1:
-                    this->window.close();
-                    break;
-                }
-            }
-            return;
-        }
-
-        if (this->ui->getGameState() == GameState::PLAYING) {
-            if (this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Escape) {
-                this->ui->setState(GameState::PAUSED);
-            }
-            else if (this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::W) {
-                if (this->player->getCanJump())
-                    this->player->jump();
+        if (this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Return) {
+            int selection = this->ui->getMenuSelection();
+            switch (selection) {
+                case 0: this->ui->setState(GameState::PLAYING); break;
+                case 1: this->ui->setState(GameState::SETTINGS); this->previousState = GameState::MAINMENU; break;
+                case 2: this->window.close(); break;
             }
         }
     }
+    else if (state == GameState::PAUSED) {
+        this->ui->handlePauseMenuInput(this->ev);
+
+        if (this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Return) {
+            int selection = this->ui->getPauseSelection();
+            switch (selection) {
+                case 0: this->ui->setState(GameState::PLAYING); break;
+                case 1: this->ui->setState(GameState::MAINMENU); break;
+                case 2: this->ui->setState(GameState::SETTINGS); this->previousState = GameState::PAUSED; break;
+                case 3: this->window.close(); break;
+            }
+        }
+    }
+    else if (state == GameState::SETTINGS) {
+        if (this->ui->getIsRebinding()) {
+            if (this->ev.type == sf::Event::KeyPressed) {
+                std::string action = this->ui->getSettingsOptions()[this->ui->getSettingsSelection()].getString();
+                if (action != "BACK" && action != "----------") {
+                    this->settings.setKeybind(action, this->ev.key.code);
+                    this->settings.saveToFile();
+                }
+                this->ui->setIsRebinding(false);
+            }
+        } else {
+            this->ui->handleSettingsMenuInput(this->ev);
+            if (this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Return) {
+                std::string opt = this->ui->getSettingsOptions()[this->ui->getSettingsSelection()].getString();
+                if (opt == "BACK") this->ui->setState(this->previousState);
+                else if (opt == "DIFFICULTY") this->settings.toggleDifficulty();
+                else if (opt != "----------") this->ui->setIsRebinding(true);
+            }
+        }
+    }
+    else if (state == GameState::GAMEOVER) {
+        this->ui->handleGameOverMenuInput(this->ev);
+        if (this->ev.type == sf::Event::KeyPressed && this->ev.key.code == sf::Keyboard::Return) {
+            int selection = this->ui->getGameOverSelection();
+            if (selection == 0) this->window.close();
+        }
+    }
+
+    // Only handle gameplay keys if PLAYING
+    if (state == GameState::PLAYING) {
+        if (this->ev.type == sf::Event::KeyPressed) {
+            if (this->ev.key.code == this->settings.getKeybind("MENU"))
+                this->ui->setState(GameState::PAUSED);
+            else if (this->ev.key.code == this->settings.getKeybind("JUMP"))
+                if (this->player->getCanJump()) this->player->jump();
+        }
+    }
+}
+
 
     if (this->ui->getGameState() == GameState::PLAYING) {
         this->updateInput();
@@ -427,29 +491,37 @@ void Game::renderPlayer() {
 }
 
 void Game::render() {
+    // Clear with a dark color (visible in Main Menu)
     this->window.clear(sf::Color(20, 20, 30));
 
-    if (this->ui->getGameState() == GameState::MAINMENU) {
-        this->ui->render(this->window);
-        this->window.display();
-        return;
-    }
+    GameState state = this->ui->getGameState();
 
-    if (this->ui->getGameState() == GameState::PLAYING || this->ui->getGameState() == GameState::PAUSED) {
+    // LAYER 1: GAME WORLD (Only rendered during Playing or Paused)
+    if (state == GameState::PLAYING || state == GameState::PAUSED) {
+        // Render background on a static view (doesn't follow camera)
+        this->window.setView(this->window.getDefaultView());
+        this->window.draw(this->backgroundSprite);
+
+        // Render level and player on the moving camera view
         this->window.setView(this->view);
         this->level->render(this->window);
         this->renderPlayer();
-
-        this->window.setView(this->window.getDefaultView());
-        this->ui->renderHUD(this->window);
-
-        if (this->ui->getGameState() == GameState::PAUSED) {
-            this->ui->renderPauseMenu(this->window);
-        }
     }
 
-    if (this->ui->getGameState() == GameState::GAMEOVER || this->ui->getGameState() == GameState::VICTORY) {
+    // LAYER 2: INTERFACE (Always on top, using default screen view)
+    this->window.setView(this->window.getDefaultView());
+    
+    if (state == GameState::MAINMENU || state == GameState::SETTINGS || state == GameState::GAMEOVER) {
+        // Fullscreen menus
         this->ui->render(this->window);
+    } 
+    else {
+        // Gameplay HUD elements
+        this->ui->renderHUD(this->window);
+        
+        if (state == GameState::PAUSED) {
+            this->ui->renderPauseMenu(this->window);
+        }
     }
 
     this->window.display();

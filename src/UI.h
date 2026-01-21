@@ -7,8 +7,7 @@ enum class GameState {
     SETTINGS,
     PLAYING,
     PAUSED,
-    GAMEOVER,
-    VICTORY
+    GAMEOVER
 };
 
 class Settings;
@@ -89,7 +88,7 @@ class UI{
         sf::Text gameOverTitle;
         std::vector <sf::Text> gameOverOptions;
         int gameOverSelectedOption;
-        void initGameOverMenu(bool didWin);
+        void initGameOverMenu();
 
         // Victory Menu
         sf::Text victoryTitle;

@@ -3,73 +3,61 @@
 #include "Player.h"
 #include "Input.h"
 #include "Level.h"
+#include "Platform.h"
+#include "Enemy.h"
 #include "UI.h"
 #include "Settings.h"
 #include "PathUtils.h"
 
-class Game{
-    private:
-        // Core
+class Game {
+private:
+    // Window and Rendering
+    sf::RenderWindow window;
+    sf::Event ev;
+    sf::View view;
 
-        sf::RenderWindow window;
-        sf::Event ev;
-        sf::View view;
-        sf::Texture playerTextureSheet;
-        bool gameOver = false;
-        sf::Texture backgroundTexture;
-        sf::Sprite backgroundSprite;
-        // sf::Font font;
-        // sf::Text gameOverText;
-        GameState previousState;
+    // Assets
+    sf::Texture playerTextureSheet;
+    sf::Texture backgroundTexture;
+    sf::Sprite backgroundSprite;
+    std::string assetRoot;
 
-        std::string assetRoot;
+    // Logic and State
+    GameState previousState; // Used to remember if we came from Pause or Main Menu
+    bool gameOver;
 
-        // Class
+    // Systems
+    Settings settings;
+    UI* ui;
+    Player* player;
+    Input* input;
+    Level* level;
 
-        Settings settings;
-        UI* ui;
-        Player* player;
-        Input* input;
-        Level* level;
-        
-        // Initialization
+    // Initialization helpers
+    void initWindow();
+    void initUI();
+    void initTextures();
+    void initInput();
+    void initLevel();
+    void initPlayer();
 
-        void initWindow();
-        void initUI();
-        void initTextures();
-        void initInput();
-        void initLevel();
-        void initPlayer();
-        
+public:
+    // Constructors / Destructors
+    Game();
+    virtual ~Game();
 
-    public:
-        // Constructors / Destructors
+    // Accessors
+    const sf::RenderWindow& getWindow() const;
+    inline bool getGameOver() const { return this->gameOver; }
 
-        Game();
-        virtual ~Game();
+    // Core Game Loop Functions
+    void updateInput();
+    void updatePlayer();
+    void updateCollision();
+    void updateView();
+    void updateCombat();
 
-        // Accessors
-
-        const sf::RenderWindow& getWindow() const;
-        
-        // Inline functions
-
-        inline bool getGameOver() const { return this->gameOver; };
-
-        // Functions
-
-        void updateInput();
-        void updatePlayer();
-        void updateCollision();
-        void updateView();
-        void updateCombat();
-
-        void update();
-
-        void renderPlayer();
-
-        void render();
-
-
-
+    void update(); // Main update router
+    void render(); // Main render router
+    void renderPlayer();
 };
